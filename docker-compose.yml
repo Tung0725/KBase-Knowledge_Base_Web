@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: kbase_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: kbase_user
+      POSTGRES_PASSWORD: kbase_password
+      POSTGRES_DB: kbase_db
+    volumes:
+      - kbase_pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio
+    container_name: kbase_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - kbase_minio_data:/data
+    restart: unless-stopped
+
+volumes:
+  kbase_pg_data:
+  kbase_minio_data:
