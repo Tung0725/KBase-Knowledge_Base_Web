@@ -7,9 +7,20 @@
 - **Type:** Infrastructure | **Priority:** High | **Estimate:** 4 Hrs | **Status:** [ ] Todo
 - **User Story:** As a Dev, I want to set up Docker, Postgres, MinIO, Spring Boot, and React Vite so that the team has a working environment.
 - **Acceptance Criteria (AC):**
-  - [ ] Chạy thành công `docker-compose up` khởi tạo DB và MinIO.
-  - [ ] Spring Boot kết nối thành công tới Postgres (có base Entity User).
-  - [ ] React Vite chạy thành công ở `localhost:5173`.
+  - [x] Chạy thành công `docker-compose up` khởi tạo DB và MinIO.
+  - [x] Spring Boot kết nối thành công tới Postgres (có base Entity User).
+  - [x] React Vite chạy thành công ở `localhost:5173`.
+- **Status:** [x] Done
+
+### [TASK-01.5] Ghép giao diện 3 trang Mockup (Portal, Auth, Hub)
+- **Type:** Frontend | **Priority:** High | **Estimate:** 3 Hrs | **Status:** [x] Done
+- **User Story:** As a Dev, I want to convert the HTML mockups for Portal, Auth, and Hub into React components with fully working Tailwind 4 Design Tokens and Dark Mode.
+- **Acceptance Criteria (AC):**
+  - [x] Tạo `PRODUCT.md` và `DESIGN.md` để đồng bộ Design System.
+  - [x] Ghép trang `Portal.tsx` (Landing Page).
+  - [x] Ghép trang `Auth.tsx` (Đăng nhập/Đăng ký) hỗ trợ đổi theme.
+  - [x] Ghép trang `Hub.tsx` (Dashboard) fix chuẩn thẻ màu cho Dark Mode.
+- **Status:** [x] Done
 
 ### [TASK-02] Đăng nhập & Đăng ký (Backend + Frontend)
 - **Type:** Feature | **Priority:** High | **Estimate:** 4 Hrs | **Status:** [ ] Todo

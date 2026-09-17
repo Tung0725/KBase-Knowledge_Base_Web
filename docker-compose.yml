@@ -4,7 +4,7 @@ services:
     image: postgres:15-alpine
     container_name: kbase_postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: kbase_user
       POSTGRES_PASSWORD: kbase_password
@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     container_name: kbase_minio
     ports:
       - "9000:9000"
