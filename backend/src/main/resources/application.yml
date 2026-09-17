@@ -5,7 +5,7 @@ spring:
   application:
     name: kbase-backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/kbase_db
+    url: jdbc:postgresql://localhost:5433/kbase_db
     username: kbase_user
     password: kbase_password
     driver-class-name: org.postgresql.Driver
