@@ -23,12 +23,12 @@
 - **Status:** [x] Done
 
 ### [TASK-02] Đăng nhập & Đăng ký (Backend + Frontend)
-- **Type:** Feature | **Priority:** High | **Estimate:** 4 Hrs | **Status:** [ ] Todo
+- **Type:** Feature | **Priority:** High | **Estimate:** 4 Hrs | **Status:** [x] Done
 - **User Story:** As a User, I want to sign up and log in so that I can securely access my workspace.
 - **Acceptance Criteria (AC):**
-  - [ ] Backend: API `/api/auth/register` (BCrypt password) và `/api/auth/login` (Generate JWT).
-  - [ ] Frontend: Giao diện Auth (Login/Signup form). Xử lý lưu JWT vào `localStorage`/`cookies`.
-  - [ ] Bắt lỗi: Email đã tồn tại, Sai mật khẩu.
+  - [x] Backend: API `/api/auth/register` (BCrypt password), `/api/auth/login` (Generate JWT) và `/api/auth/me`.
+  - [x] Frontend: Giao diện Auth (Login/Signup form). Xử lý lưu JWT vào `localStorage`/`cookies`.
+  - [x] Bắt lỗi: Email đã tồn tại, Sai mật khẩu (Xử lý qua GlobalExceptionHandler ở Backend).
 
 ## Day 2: Quản lý Dự án (Project Workspace)
 

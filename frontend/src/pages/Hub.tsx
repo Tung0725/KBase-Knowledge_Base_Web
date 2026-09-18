@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import logoImg from '../assets/Logo_KBase.png';
 
 const Hub: React.FC = () => {
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDark]);
-
-  const toggleTheme = () => setIsDark(!isDark);
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }} className="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
       {/* Theme Toggle Button */}
       <button
         onClick={toggleTheme}
@@ -31,11 +33,7 @@ const Hub: React.FC = () => {
         <div className="max-w-[1720px] mx-auto flex items-center justify-between">
 
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-sm shadow-primary/20 text-white">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-              </svg>
-            </div>
+            <img src={logoImg} alt="KBase Logo" className="w-9 h-auto object-contain" />
             <div className="flex items-center gap-2">
               <span className="text-xl font-bold tracking-tight text-on-surface font-bold">KBase</span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-surface-container-low text-on-surface-variant border border-outline-variant/60 hidden sm:inline-block">Hub Tri thức</span>
@@ -71,12 +69,20 @@ const Hub: React.FC = () => {
               </svg>
             </button>
 
-            <div className="relative group cursor-pointer">
+            <div className="relative group cursor-pointer" title={user?.email || "User Profile"}>
               <div className="w-9 h-9 rounded-full ring-2 ring-primary/30 overflow-hidden bg-surface-container flex items-center justify-center">
                 <span className="text-xs font-semibold text-on-surface">PM</span>
               </div>
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#f0fdf4] dark:bg-[#166534] dark:bg-surface-container/300 rounded-full border-2 border-white"></span>
             </div>
+
+            <button 
+              onClick={handleLogout}
+              className="p-2 ml-1 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-full transition-colors flex items-center justify-center" 
+              title="Đăng xuất"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+            </button>
           </div>
         </div>
       </header>
@@ -426,7 +432,7 @@ const Hub: React.FC = () => {
 
 
 
-    </div>
+    </motion.div>
   );
 };
 

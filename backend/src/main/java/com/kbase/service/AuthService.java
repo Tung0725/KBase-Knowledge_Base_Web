@@ -5,6 +5,7 @@ import com.kbase.dto.request.RegisterRequest;
 import com.kbase.dto.response.AuthResponse;
 import com.kbase.entity.User;
 import com.kbase.repository.UserRepository;
+import com.kbase.security.CustomUserDetails;
 import com.kbase.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -48,7 +49,7 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(new CustomUserDetails(user));
 
         return AuthResponse.builder()
                 .token(jwtToken)
@@ -77,7 +78,7 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        String jwtToken = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(new CustomUserDetails(user));
 
         return AuthResponse.builder()
                 .token(jwtToken)

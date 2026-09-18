@@ -1,20 +1,76 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate, Link } from 'react-router-dom';
+import logoImg from '../assets/Logo_KBase.png';
+import { authService } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Auth: React.FC = () => {
-    const [isDark, setIsDark] = useState(false);
+    const { isDark, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+    const { setUser } = useAuth();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [isToastError, setIsToastError] = useState(false);
+  
+  // Form State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const toggleAuthMode = () => setIsRegisterMode(!isRegisterMode);
+  const toggleAuthMode = () => {
+    setIsRegisterMode(!isRegisterMode);
+    setShowToast(false);
+  };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setToastMessage(isRegisterMode ? 'Đăng ký thành công! Đang thiết lập không gian của bạn...' : 'Xác thực thành công! Đang chuyển tiếp vào bảng điều khiển KBase...');
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 4000);
+    setIsLoading(true);
+    setShowToast(false);
+
+    try {
+      if (isRegisterMode) {
+        await authService.register({ email, password, fullName });
+        setToastMessage('Đăng ký thành công! Vui lòng tiến hành đăng nhập.');
+        setIsToastError(false);
+        setShowToast(true);
+        setIsRegisterMode(false);
+        setPassword('');
+      } else {
+        const userData = await authService.login({ email, password });
+        setToastMessage('Xác thực thành công! Đang chuyển tiếp vào bảng điều khiển KBase...');
+        setIsToastError(false);
+        setShowToast(true);
+        
+        if (userData.token) {
+          localStorage.setItem('token', userData.token);
+        }
+        setUser(userData);
+        
+        setTimeout(() => {
+          navigate('/hub');
+        }, 2000);
+      }
+      
+    } catch (error: any) {
+      let errorMsg = error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại.';
+      
+      const errorData = error.response?.data?.data;
+      if (errorData && typeof errorData === 'object') {
+        errorMsg = Object.values(errorData).join(', ');
+      }
+
+      setToastMessage(errorMsg);
+      setIsToastError(true);
+      setShowToast(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const triggerSSO = (provider: string) => {
@@ -24,18 +80,8 @@ const Auth: React.FC = () => {
   };
 
 
-    useEffect(() => {
-        if (isDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    }, [isDark]);
-
-    const toggleTheme = () => setIsDark(!isDark);
-
     return (
-        <div className="bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-primary">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }} className="bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-primary">
             {/* Theme Toggle Button */}
             <button 
                 onClick={toggleTheme} 
@@ -50,15 +96,13 @@ const Auth: React.FC = () => {
 
 <header className="w-full px-6 sm:px-12 py-5 sm:py-7 flex items-center justify-between z-10 bg-transparent">
 
-<a className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1" href="#">
-<div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-sm group-hover:scale-105 transition-transform duration-200">
-<span className="material-symbols-outlined text-[20px]">menu_book</span>
-</div>
+<Link className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1" to="/">
+<img src={logoImg} alt="KBase Logo" className="w-9 h-auto object-contain group-hover:scale-105 transition-transform duration-200" />
 <div className="flex flex-col">
 <span className="font-headline-sm text-xl font-bold tracking-tight text-on-surface leading-none">KBase</span>
 <span className="text-[11px] font-medium tracking-wide text-on-surface-variant leading-tight mt-0.5">Hub Tri thức Dự án</span>
 </div>
-</a>
+</Link>
 
 <div className="flex items-center gap-4 sm:gap-6 text-[13px] sm:text-sm">
 <div className="hidden sm:inline-flex items-center gap-1.5 text-on-surface-variant font-medium">
@@ -188,8 +232,8 @@ const Auth: React.FC = () => {
             </p>
 </div>
 
-<div className={`mb-5 p-3.5 rounded-xl bg-secondary-fixed text-on-secondary-fixed text-sm font-medium items-center gap-2.5 transition-all ${showToast ? 'flex' : 'hidden'}`} id="statusToast">
-<span className="material-symbols-outlined text-[20px] text-secondary">check_circle</span>
+<div className={`mb-5 p-3.5 rounded-xl ${isToastError ? 'bg-error-container text-on-error-container' : 'bg-secondary-fixed text-on-secondary-fixed'} text-sm font-medium items-center gap-2.5 transition-all ${showToast ? 'flex' : 'hidden'}`} id="statusToast">
+<span className="material-symbols-outlined text-[20px]">{isToastError ? 'error' : 'check_circle'}</span>
 <span id="statusToastText">{toastMessage}</span>
 </div>
 
@@ -197,19 +241,19 @@ const Auth: React.FC = () => {
 
 <div className={`flex-col gap-1 ${isRegisterMode ? 'flex' : 'hidden'}`} id="regNameField">
 <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider" htmlFor="fullNameInput">Họ và tên thành viên</label>
-<input className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant/80 rounded-xl text-on-surface placeholder:text-outline text-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all shadow-sm" id="fullNameInput" placeholder="Nguyễn Văn An" type="text"/>
+<input className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant/80 rounded-xl text-on-surface placeholder:text-outline text-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all shadow-sm disabled:opacity-50" id="fullNameInput" placeholder="Nguyễn Văn An" type="text" value={fullName} onChange={e => setFullName(e.target.value)} disabled={isLoading} required={isRegisterMode} />
 </div>
 
 <div className="flex flex-col gap-1">
 <label className="sr-only" htmlFor="emailInput">Email trường hoặc tổ chức</label>
-<input className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant/80 rounded-xl text-on-surface placeholder:text-outline text-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all shadow-sm" id="emailInput" placeholder="Email trường hoặc tổ chức" required type="email"/>
+<input className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant/80 rounded-xl text-on-surface placeholder:text-outline text-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all shadow-sm disabled:opacity-50" id="emailInput" placeholder="Email trường hoặc tổ chức" required type="email" value={email} onChange={e => setEmail(e.target.value)} disabled={isLoading} />
 </div>
 
 <div className="flex flex-col gap-1">
 <label className="sr-only" htmlFor="passwordInput">Mật khẩu</label>
 <div className="relative flex items-center">
-<input className="w-full pl-4 pr-11 py-3 bg-surface-container-lowest border border-outline-variant/80 rounded-xl text-on-surface placeholder:text-outline text-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all shadow-sm" id="passwordInput" placeholder="Mật khẩu" required type={showPassword ? "text" : "password"}/>
-<button aria-label="Hiển thị mật khẩu" className="absolute right-3.5 text-outline hover:text-on-surface transition-colors p-0.5 focus:outline-none" onClick={() => setShowPassword(!showPassword)} title="Hiển thị/Ẩn mật khẩu" type="button">
+<input className="w-full pl-4 pr-11 py-3 bg-surface-container-lowest border border-outline-variant/80 rounded-xl text-on-surface placeholder:text-outline text-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all shadow-sm disabled:opacity-50" id="passwordInput" placeholder="Mật khẩu" required type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
+<button aria-label="Hiển thị mật khẩu" className="absolute right-3.5 text-outline hover:text-on-surface transition-colors p-0.5 focus:outline-none" onClick={() => setShowPassword(!showPassword)} title="Hiển thị/Ẩn mật khẩu" type="button" disabled={isLoading}>
 <span className="material-symbols-outlined text-[20px]" id="pwdEyeIcon">{showPassword ? "visibility_off" : "visibility"}</span>
 </button>
 </div>
@@ -225,9 +269,15 @@ const Auth: React.FC = () => {
 </a>
 </div>
 
-<button className="w-full py-3 px-6 rounded-full bg-primary-container hover:bg-primary text-on-primary-container font-headline-sm text-[15px] font-semibold tracking-normal shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-150 flex items-center justify-center gap-2 mt-2" id="submitCtaBtn" type="submit">
-<span id="submitCtaText">{isRegisterMode ? "Tạo tài khoản KBase" : "Đăng nhập"}</span>
-<span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+<button className="w-full py-3 px-6 rounded-full bg-primary-container hover:bg-primary text-on-primary-container font-headline-sm text-[15px] font-semibold tracking-normal shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-150 flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-wait" id="submitCtaBtn" type="submit" disabled={isLoading}>
+{isLoading ? (
+  <span className="w-5 h-5 border-2 border-on-primary-container border-t-transparent rounded-full animate-spin"></span>
+) : (
+  <>
+    <span id="submitCtaText">{isRegisterMode ? "Tạo tài khoản KBase" : "Đăng nhập"}</span>
+    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+  </>
+)}
 </button>
 
 <div className="pt-1 flex items-center gap-2.5">
@@ -306,7 +356,7 @@ const Auth: React.FC = () => {
 
 
 
-        </div>
+        </motion.div>
     );
 };
 

@@ -1,82 +1,93 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import AnimatedSection from '../components/AnimatedSection';
+import TypewriterText from '../components/TypewriterText';
+import FloatingIcon from '../components/FloatingIcon';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import logoImg from '../assets/Logo_KBase.png';
 
 const Portal: React.FC = () => {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDark]);
-
-  const toggleTheme = () => setIsDark(!isDark);
+  const { user } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <div className="bg-surface text-on-surface font-body-md antialiased min-h-screen">
-      {/* Theme Toggle Button */}
-      <button
-        onClick={toggleTheme}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-primary-container text-on-primary-container rounded-full shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
-        title="Toggle Dark/Light Mode"
-      >
-        <span className="material-symbols-outlined">
-          {isDark ? 'light_mode' : 'dark_mode'}
-        </span>
-      </button>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div className="h-20 max-w-[1280px] mx-auto px-gutter flex items-center justify-between gap-space-md"><div className="flex items-center gap-space-md"><a className="flex items-center gap-space-sm group" data-path="landing-page" href="#"><div className="w-10 h-10 rounded-DEFAULT bg-primary-fixed flex items-center justify-center text-primary transition-transform group-hover:scale-105"><span className="material-symbols-outlined text-[22px]">menu_book</span></div><div className="flex flex-col"><span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface leading-none">KBase</span><span className="font-label-sm text-label-sm text-on-surface-variant leading-tight mt-0.5">Hub Tri thức Dự án</span></div></a></div><nav className="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-semibold"><a className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors py-space-xs" data-path="solutions" href="#">Giải pháp</a><a className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors py-space-xs" data-path="features" href="#">Tính năng</a><a className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors py-space-xs" data-path="roles-permissions" href="#">Phân quyền & Vai trò</a><a className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors py-space-xs" data-path="security" href="#">Bảo mật</a><a className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors py-space-xs" data-path="pricing" href="#">Bảng giá</a></nav><div className="flex items-center gap-space-sm"><button className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" title="Tìm kiếm hoặc Demo nhanh" type="button"><span className="material-symbols-outlined text-[20px]">search</span></button><a className="font-label-md text-label-md text-on-surface-variant hover:text-on-surface px-space-md py-space-sm rounded-full transition-colors hidden sm:inline-flex items-center" data-path="login" href="#">Đăng nhập</a><a className="font-label-md text-label-md bg-primary-container text-on-primary-container hover:bg-primary px-space-lg py-space-sm rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-all flex items-center gap-space-xs" data-path="register" href="#"><span>Bắt đầu ngay</span><span className="material-symbols-outlined text-[16px]">arrow_forward</span></a><div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 ml-space-xs"><span className="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main className="w-full pt-20 bg-surface min-h-screen"><div className="flex flex-col w-full">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="h-20 max-w-[1280px] mx-auto px-gutter flex items-center justify-between gap-space-md">
+          <div className="flex items-center gap-space-md">
+            <div className="flex items-center gap-space-sm group cursor-default">
+              <img src={logoImg} alt="KBase Logo" className="h-10 w-auto object-contain transition-transform group-hover:scale-105" />
+              <div className="flex flex-col">
+                <span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface leading-none">KBase</span>
+                <span className="font-label-sm text-label-sm text-on-surface-variant leading-tight mt-0.5">Hub Tri thức Dự án</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-space-sm">
+            <Link className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 shadow-sm px-6 py-2.5 rounded-full transition-all hidden sm:inline-flex items-center" to="/auth">Đăng nhập</Link>
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant"
+              title="Toggle Dark/Light Mode"
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                {isDark ? 'light_mode' : 'dark_mode'}
+              </span>
+            </button>
+          </div>
+        </div>
+      </header>
+      <main className="w-full pt-20 bg-surface min-h-screen">
+        <div className="flex flex-col w-full">
 
-        <section className="relative w-full overflow-hidden pt-space-lg pb-space-xl">
+        <motion.section 
+          initial={{ opacity: 0, y: 30 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.8, ease: "easeOut" }} 
+          className="relative w-full overflow-hidden min-h-[calc(100vh-80px)] flex flex-col justify-center pt-space-xl pb-space-xl"
+        >
 
           <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[720px] h-[340px] bg-primary-fixed/45 blur-[120px] rounded-full pointer-events-none -z-10"></div>
           <div className="absolute top-40 right-10 w-[380px] h-[260px] bg-secondary-container/40 blur-[100px] rounded-full pointer-events-none -z-10"></div>
-          <div className="max-w-[1280px] mx-auto px-gutter flex flex-col items-center text-center">
 
-            <div className="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container-lowest shadow-sm mb-space-lg transition-transform hover:scale-[1.02] cursor-default">
-              <span className="text-primary text-[14px]">✨</span>
-              <span className="font-label-sm text-label-sm text-on-surface font-semibold tracking-wide">
-                Trung tâm Lưu trữ & Quản trị Tri thức Dự án Tập trung
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-primary mx-1"></span>
-              <span className="font-label-sm text-label-sm text-primary font-medium">v2.4 Live</span>
-            </div>
+          {/* Floating Decorative Icons */}
+          <div className="absolute inset-0 max-w-[1440px] mx-auto pointer-events-none -z-0">
+            <FloatingIcon icon="menu_book" className="top-[13%] left-[8%] rotate-[-12deg]" delay={0.2} duration={4.5} size={36} color="text-blue-500 dark:text-blue-400" />
+            <FloatingIcon icon="computer" className="top-[39%] left-[5%] rotate-[8deg]" delay={0.6} duration={5.2} size={32} yOffset={20} color="text-purple-500 dark:text-purple-400" />
+            <FloatingIcon icon="folder_open" className="top-[25%] left-[20%] rotate-[-5deg]" delay={1.1} duration={4.8} size={30} color="text-amber-500 dark:text-amber-400" />
+            <FloatingIcon icon="image" className="top-[3%] left-[17%] rotate-[10deg]" delay={0.5} duration={4.6} size={28} color="text-pink-500 dark:text-pink-400" />
+            <FloatingIcon icon="picture_as_pdf" className="top-[35%] left-[28%] rotate-[-8deg]" delay={1.4} duration={5.1} size={34} yOffset={15} color="text-rose-500 dark:text-rose-400" />
+            
+            <FloatingIcon icon="description" className="top-[21%] right-[18%] rotate-[15deg]" delay={0.4} duration={5} size={32} yOffset={18} color="text-emerald-500 dark:text-emerald-400" />
+            <FloatingIcon icon="draw" className="top-[35%] right-[15%] rotate-[-10deg]" delay={0.8} duration={4.3} size={36} color="text-red-500 dark:text-red-400" />
+            <FloatingIcon icon="topic" className="top-[6%] right-[10%] rotate-[5deg]" delay={1.3} duration={5.5} size={28} yOffset={12} color="text-orange-500 dark:text-orange-400" />
+            <FloatingIcon icon="smart_display" className="top-[20%] right-[6%] rotate-[12deg]" delay={0.7} duration={4.9} size={32} yOffset={22} color="text-cyan-500 dark:text-cyan-400" />
+            <FloatingIcon icon="audio_file" className="top-[5%] right-[26%] rotate-[-15deg]" delay={1.0} duration={5.3} size={30} color="text-indigo-500 dark:text-indigo-400" />
+          </div>
+
+          <div className="max-w-[1280px] mx-auto px-gutter flex flex-col items-center text-center pt-8 md:pt-16 relative z-10">
+
 
             <h1 className="font-display text-display text-on-surface max-w-4xl tracking-tight leading-tight mb-space-md">
-              Một nguồn chân lý duy nhất <span className="text-primary font-display">(Single Source of Truth)</span> cho mọi dự án của bạn
+              <TypewriterText text="Một nguồn chân lý duy nhất " speed={0.03} />
+              <TypewriterText text="(Single Source of Truth)" className="text-primary font-display inline-block" delayOffset={27 * 0.03} speed={0.03} />
+              <TypewriterText text=" cho mọi dự án của bạn" delayOffset={(27 + 24) * 0.03} speed={0.03} />
             </h1>
 
-            <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-space-xl leading-relaxed">
-              Chấm dứt tình trạng tài liệu, video họp và báo cáo bị phân tán rải rác trên Drive, Zalo hay Slack. KBase giúp lưu trữ an toàn, phân quyền chặt chẽ và tìm kiếm tức thì chỉ trong vài giây.
-            </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-space-md w-full max-w-md mb-space-xl">
-              <a className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-3.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md shadow-md hover:bg-primary transition-all group" data-path="register" href="#">
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-space-md w-full max-w-md mt-17 mb-17">
+              <Link 
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-3.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md shadow-md hover:bg-primary transition-colors group" 
+                to={user ? "/hub" : "/auth"}
+              >
                 <span>Khám phá không gian mẫu</span>
                 <span className="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-1">arrow_forward</span>
-              </a>
-              <a className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-lg py-3.5 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all" data-path="login" href="#">
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
-                </svg>
-                <span>Đăng nhập với Google</span>
-              </a>
+              </Link>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-space-sm sm:gap-space-md py-space-sm px-space-lg rounded-full bg-surface-container-low shadow-sm">
-              <div className="flex -space-x-2 shrink-0">
-                <div className="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary text-[11px] font-bold shadow-sm">BK</div>
-                <div className="w-7 h-7 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary text-[11px] font-bold shadow-sm">FPT</div>
-                <div className="w-7 h-7 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary text-[11px] font-bold shadow-sm">VNG</div>
-                <div className="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant text-[11px] font-bold shadow-sm">+99</div>
-              </div>
-              <span className="font-label-sm text-label-sm text-on-surface-variant font-medium">
-                Được tin cậy bởi hơn <span className="font-semibold text-on-surface">1,200+ nhóm kỹ thuật</span>, đồ án capstone và tổ chức công nghệ.
-              </span>
-            </div>
           </div>
 
           <div className="max-w-[1240px] mx-auto px-gutter mt-space-xl">
@@ -281,9 +292,9 @@ const Portal: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section className="w-full py-space-xl bg-surface-container-low/50">
+        <AnimatedSection className="w-full py-space-xl bg-surface-container-low/50">
           <div className="max-w-[1280px] mx-auto px-gutter">
             <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-space-xl">
               <span className="font-label-sm text-label-sm font-semibold tracking-wider text-primary uppercase mb-space-xs">
@@ -372,9 +383,9 @@ const Portal: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
-        <section className="w-full py-space-xl">
+        <AnimatedSection className="w-full py-space-xl">
           <div className="max-w-[1280px] mx-auto px-gutter">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-space-xl gap-space-md">
               <div>
@@ -524,9 +535,9 @@ const Portal: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
-        <section className="w-full py-space-xl bg-surface-container-low/40">
+        <AnimatedSection className="w-full py-space-xl bg-surface-container-low/40">
           <div className="max-w-[1280px] mx-auto px-gutter">
             <div className="bg-surface-container-lowest rounded-xl p-space-lg md:p-space-xl shadow-md">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter-lg items-center">
@@ -638,9 +649,9 @@ const Portal: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
-        <section className="w-full py-space-xl">
+        <AnimatedSection className="w-full py-space-xl">
           <div className="max-w-[1280px] mx-auto px-gutter">
             <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-container text-on-primary p-space-xl md:p-margin text-center shadow-xl">
 
@@ -658,11 +669,11 @@ const Portal: React.FC = () => {
                   Thiết lập không gian KBase đầu tiên của bạn chỉ trong 30 giây. Hoàn toàn miễn phí cho nhóm dự án nhỏ và đồ án sinh viên.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-space-md w-full max-w-md">
-                  <a className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-4 rounded-full bg-surface-container-lowest text-primary font-label-md text-label-md font-semibold shadow-lg hover:bg-surface-container-low transition-all" data-path="register" href="#">
+                  <Link className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-4 rounded-full bg-surface-container-lowest text-primary font-label-md text-label-md font-semibold shadow-lg hover:bg-surface-container-low transition-colors" to={user ? "/hub" : "/auth"}>
                     <span>Bắt đầu sử dụng KBase ngay</span>
                     <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                  </a>
-                  <a className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-lg py-4 rounded-full bg-on-primary/10 text-on-primary font-label-md text-label-md hover:bg-on-primary/20 transition-all backdrop-blur-sm" data-path="documentation" href="#">
+                  </Link>
+                  <a className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-lg py-4 rounded-full bg-on-primary/10 text-on-primary font-label-md text-label-md hover:bg-on-primary/20 transition-colors backdrop-blur-sm" href="#">
                     <span className="material-symbols-outlined text-[18px]">support_agent</span>
                     <span>Liên hệ hỗ trợ tổ chức</span>
                   </a>
@@ -670,8 +681,9 @@ const Portal: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
-      </div></main><footer className="w-full bg-surface-container-lowest shadow-[0_-1px_6px_rgba(0,0,0,0.03)]"><div className="max-w-[1280px] mx-auto px-gutter pt-space-xl pb-space-lg"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-gutter-lg mb-space-xl"><div className="lg:col-span-2 flex flex-col items-start pr-space-lg"><div className="flex items-center gap-space-sm mb-space-sm"><div className="w-9 h-9 rounded-DEFAULT bg-primary-fixed flex items-center justify-center text-primary"><span className="material-symbols-outlined text-[20px]">menu_book</span></div><span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface">KBase</span></div><p className="font-body-sm text-body-sm text-on-surface-variant max-w-sm mb-space-md">Không gian tổng hợp tri thức, tài liệu và quy trình dự án hiện đại. Được tối ưu hoá để loại bỏ phân mảnh thông tin trong các nhóm nghiên cứu và phát triển.</p><div className="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"><span className="w-2 h-2 rounded-full bg-secondary"></span><span>Hệ thống hoạt động ổn định</span></div></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Sản phẩm</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Tính năng cốt lõi</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Kho lưu trữ thông minh</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#">Gói chi phí & Ưu đãi</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="landing-page" href="#">Lộ trình phát triển</a></li></ul></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Giải pháp đội ngũ</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Dành cho Project Manager</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Dành cho Thành viên</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="roles-permissions" href="#">Quản trị viên (Admin)</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Bảo mật & Tuân thủ</a></li></ul></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Tài nguyên</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="documentation" href="#">Tài liệu hướng dẫn</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Chính sách bảo mật</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Điều khoản dịch vụ</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="documentation" href="#">Trung tâm hỗ trợ</a></li></ul></div></div><div className="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm"><p className="font-label-sm text-label-sm text-on-surface-variant">© 2026 KBase Hub. Bản quyền được bảo hộ.</p><div className="flex items-center gap-space-md"><a className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Bảo mật dữ liệu</a><a className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Quyền riêng tư</a></div></div></div></footer>
+        </AnimatedSection>
+      </div></main>
+      <footer className="w-full bg-surface-container-lowest shadow-[0_-1px_6px_rgba(0,0,0,0.03)]"><div className="max-w-[1280px] mx-auto px-gutter pt-space-xl pb-space-lg"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-gutter-lg mb-space-xl"><div className="lg:col-span-2 flex flex-col items-start pr-space-lg"><div className="flex items-center gap-space-sm mb-space-sm"><img src={logoImg} alt="KBase Logo" className="h-9 w-auto object-contain" /><span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface">KBase</span></div><p className="font-body-sm text-body-sm text-on-surface-variant max-w-sm mb-space-md">Không gian tổng hợp tri thức, tài liệu và quy trình dự án hiện đại. Được tối ưu hoá để loại bỏ phân mảnh thông tin trong các nhóm nghiên cứu và phát triển.</p><div className="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"><span className="w-2 h-2 rounded-full bg-secondary"></span><span>Hệ thống hoạt động ổn định</span></div></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Sản phẩm</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Tính năng cốt lõi</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Kho lưu trữ thông minh</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#">Gói chi phí & Ưu đãi</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="landing-page" href="#">Lộ trình phát triển</a></li></ul></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Giải pháp đội ngũ</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Dành cho Project Manager</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Dành cho Thành viên</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="roles-permissions" href="#">Quản trị viên (Admin)</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Bảo mật & Tuân thủ</a></li></ul></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Tài nguyên</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="documentation" href="#">Tài liệu hướng dẫn</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Chính sách bảo mật</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Điều khoản dịch vụ</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="documentation" href="#">Trung tâm hỗ trợ</a></li></ul></div></div><div className="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm"><p className="font-label-sm text-label-sm text-on-surface-variant">© 2026 KBase Hub. Bản quyền được bảo hộ.</p><div className="flex items-center gap-space-md"><a className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Bảo mật dữ liệu</a><a className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Quyền riêng tư</a></div></div></div></footer>
     </div>
   );
 };
