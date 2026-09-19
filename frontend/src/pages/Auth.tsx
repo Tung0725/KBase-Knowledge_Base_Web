@@ -53,7 +53,13 @@ const Auth: React.FC = () => {
         setUser(userData);
         
         setTimeout(() => {
-          navigate('/hub');
+          const redirectUrl = sessionStorage.getItem('redirectAfterAuth');
+          if (redirectUrl) {
+            sessionStorage.removeItem('redirectAfterAuth');
+            navigate(redirectUrl);
+          } else {
+            navigate('/hub');
+          }
         }, 2000);
       }
       

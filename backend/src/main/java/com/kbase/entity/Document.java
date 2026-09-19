@@ -32,6 +32,9 @@ public class Document extends BaseEntity {
     @Column(name = "file_type")
     private String fileType;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     private String tag;
 
     @Enumerated(EnumType.STRING)

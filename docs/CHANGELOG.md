@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-09-18
+- [TASK-03.5] (Fullstack) Hoàn thành quản lý cài đặt dự án (Cập nhật tên, mô tả, quyền Public/Private và Xóa dự án) kèm theo Modal cảnh báo và UI Dropdown menu tinh tế.
+- [TASK-03] (Backend) Đã triển khai API Tạo Project (`POST /api/projects`) và Lấy danh sách Project (`GET /api/projects`) kèm theo validate thông tin dự án.
+- [TASK-03] (Frontend) Thiết kế lại giao diện Dashboard `Hub.tsx` tuân thủ nghiêm ngặt Design Tokens, có hiệu ứng Empty State, loading skeleton và gọi API real-time; hoàn thiện `CreateProjectModal`.
+
 ## 2026-09-17
 - [TASK-01.5] Ghép giao diện 3 trang Mockup (Portal, Auth, Hub) thành React components hoàn chỉnh.
 - Thiết lập hệ thống Design Tokens (Tailwind v4) trong `index.css`.

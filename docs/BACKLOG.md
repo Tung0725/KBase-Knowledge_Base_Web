@@ -33,18 +33,29 @@
 ## Day 2: Quản lý Dự án (Project Workspace)
 
 ### [TASK-03] Quản lý Dự án (Backend + Frontend)
-- **Type:** Feature | **Priority:** High | **Estimate:** 5 Hrs | **Status:** [ ] Todo
+- **Type:** Feature | **Priority:** High | **Estimate:** 5 Hrs | **Status:** [x] Done
 - **User Story:** As a Project Owner, I want to create and view projects so that I can organize my team's work.
 - **Acceptance Criteria (AC):**
-  - [ ] Backend: API Tạo Project (Gán default Quota = 5GB) & Lấy danh sách Project theo User.
-  - [ ] Frontend: Giao diện Project Dashboard (Danh sách dự án dưới dạng Grid/Card). Modal tạo Project mới.
+  - [x] Backend: API Tạo Project (Gán default Quota = 5GB) & Lấy danh sách Project theo User.
+  - [x] Frontend: Giao diện Project Dashboard (Danh sách dự án dưới dạng Grid/Card). Modal tạo Project mới.
 
-### [TASK-04] Quản lý Thành viên dự án
-- **Type:** Feature | **Priority:** High | **Estimate:** 3 Hrs | **Status:** [ ] Todo
-- **User Story:** As a Project Owner, I want to invite members so that they can access the project.
+### [TASK-03.5] Quản lý Cài đặt Dự án (Project Settings)
+- **Type:** Feature | **Priority:** Medium | **Estimate:** 4 Hrs | **Status:** [x] Done
+- **User Story:** As a Project Owner, I want to edit, delete, and set visibility of my project so that I can fully manage its lifecycle.
 - **Acceptance Criteria (AC):**
-  - [ ] Backend: API thêm Member bằng Email. Kiểm tra quyền (Chỉ Owner mới được thêm).
-  - [ ] Frontend: Trang Project Details có phần quản lý Member (nút Invite).
+  - [x] Backend: API Cập nhật thông tin dự án (Tên, Mô tả) và API Xóa dự án (xóa cả metadata và dọn dẹp file trên MinIO).
+  - [x] Backend: Bổ sung trường `is_public` (boolean) cho dự án, API toggle trạng thái.
+  - [x] Frontend: Menu "Cài đặt" trong Project Card/Details cho phép thao tác các tính năng trên, kèm Modal cảnh báo nguy hiểm khi Xóa dự án.
+
+### [TASK-04] Quản lý Thành viên (Mời tham gia)
+- **Type:** Feature | **Priority:** High | **Estimate:** 3 Hrs | **Status:** [x] Done
+- **User Story:** As a Project Owner, I want to invite members to my project via email and set their roles (Editor/Viewer) so that my team can collaborate.
+- **Acceptance Criteria (AC):**
+  - [x] Backend: API thêm Member trực tiếp bằng Email (Direct Add).
+  - [x] Backend: API cho phép tạo Link Chia Sẻ (Shareable Link) để người dùng tự join.
+  - [x] Frontend: Giao diện Modal quản lý Thành viên trong Project Workspace.
+  - [x] Frontend: Xử lý luồng Join qua Link (Đăng ký xong tự động vào dự án).
+- **Status:** [x] Done
 
 ## Day 3: Lưu trữ Dữ liệu - Backend Core (Document & MinIO)
 

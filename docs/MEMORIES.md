@@ -12,4 +12,5 @@
 - **2026-09-17**:
   - *Spring Security Architecture*: Avoided directly implementing `UserDetails` on the database `User` entity to strictly follow the Single Responsibility Principle (SRP). Instead, implemented a Wrapper Pattern (`CustomUserDetails`) that encapsulates the `User` entity. This keeps the JPA entity "pure" while satisfying Spring Security's requirements.
   - *Springdoc OpenAPI 500 Error*: Encountered a `500 Internal Server Error` when trying to fetch `/api-docs` from Swagger UI. This was due to a version incompatibility between Spring Boot (v4.x) and `springdoc-openapi-starter-webmvc-ui` (v2.3.0). Upgrading the Springdoc dependency to `v2.7.0` fixed the issue. Always ensure Springdoc versions are strictly aligned with the Spring Boot parent version.
-
+- **2026-09-18**:
+  - *React/JSX Nested Ternaries*: ESLint and some build tools flag nested ternaries (`A ? B : C ? D : E`) inside JSX blocks as hard to read, causing yellow warnings. Always use separate `&&` conditions (e.g., `{loading && ...}`, `{!loading && error && ...}`) or standard `if/else` statements before the `return` block.

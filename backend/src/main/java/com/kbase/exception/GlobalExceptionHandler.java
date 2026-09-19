@@ -47,8 +47,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGlobalException(Exception ex) {
-        // Prevent full stack traces from leaking to the client
+        // Temporary debugging: print stack trace to response
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("An unexpected error occurred on the server"));
+                .body(ApiResponse.error("Server Error: " + ex.getClass().getName() + " - " + ex.getMessage()));
     }
 }
