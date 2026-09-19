@@ -1,0 +1,56 @@
+# Tên của workflow sẽ hiển thị trên Github
+name: KBase CI Pipeline
+
+# Sự kiện kích hoạt: Workflow sẽ chạy khi push code hoặc pull request vào nhánh develop và main
+on:
+  push:
+    branches: [ "develop", "main" ]
+  pull_request:
+    branches: [ "develop", "main" ]
+
+# Định nghĩa các nhiệm vụ (Jobs)
+jobs:
+  # 1. Job build Backend (Spring Boot)
+  build-backend:
+    name: Build Backend Spring Boot
+    runs-on: ubuntu-latest # Chạy trên máy ảo Ubuntu của Github
+    
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4 # Action kéo code của bạn về máy ảo
+        
+      - name: Setup Java 17
+        uses: actions/setup-java@v4 # Cài Java
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven # Cache thư viện Maven để lần sau build nhanh hơn
+          
+      - name: Build with Maven
+        working-directory: ./backend # Trỏ vào thư mục backend
+        # Chạy lệnh build (bỏ qua test nếu bạn chưa viết Unit Test)
+        run: mvn clean package -DskipTests 
+        
+  # 2. Job build Frontend (React/Vite)
+  build-frontend:
+    name: Build Frontend React
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4 # Cài NodeJS
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+          
+      - name: Install Dependencies
+        working-directory: ./frontend # Trỏ vào thư mục frontend
+        run: npm ci # Tương tự npm install nhưng an toàn cho môi trường CI
+        
+      - name: Build Application
+        working-directory: ./frontend
+        run: npm run build
