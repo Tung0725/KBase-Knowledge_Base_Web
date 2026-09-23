@@ -4,6 +4,8 @@ import ProjectLayout from '../components/ProjectLayout';
 import ProjectMembers from './ProjectMembers';
 import ProjectDocuments from './ProjectDocuments';
 import { motion } from 'framer-motion';
+import { projectService } from '../services/projectService';
+import type { ProjectOverviewResponse } from '../types/project';
 
 import ProjectOverview from './ProjectOverview';
 
@@ -21,18 +23,26 @@ const ProjectSettings = () => (
 
 const ProjectWorkspace: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const [projectName, setProjectName] = useState('Workspace');
+  const [projectOverview, setProjectOverview] = useState<ProjectOverviewResponse | null>(null);
 
-  // TODO: Fetch project details using projectId when API is ready
   useEffect(() => {
-    // Mock fetch for now
-    if (projectId) {
-      setProjectName('Dự án KBase');
-    }
+    const fetchOverview = async () => {
+      if (!projectId) return;
+      try {
+        const data = await projectService.getProjectOverview(projectId);
+        setProjectOverview(data);
+      } catch (error) {
+        console.error('Failed to fetch project overview in workspace', error);
+      }
+    };
+    fetchOverview();
   }, [projectId]);
 
   return (
-    <ProjectLayout projectName={projectName}>
+    <ProjectLayout 
+      projectName={projectOverview?.name || 'Đang tải...'} 
+      overview={projectOverview}
+    >
       <Routes>
         <Route path="/" element={<ProjectOverview />} />
         <Route path="/documents" element={<ProjectDocuments />} />

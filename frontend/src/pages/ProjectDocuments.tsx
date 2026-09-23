@@ -247,7 +247,7 @@ const ProjectDocuments: React.FC = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-full flex flex-col gap-6">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-full flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">description</span>

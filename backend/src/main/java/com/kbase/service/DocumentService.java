@@ -145,8 +145,10 @@ public class DocumentService {
         String tag = "[Khác]";
         if (ext.matches("pdf|doc|docx|txt|xls|xlsx|ppt|pptx")) {
             tag = "[Tài liệu]";
-        } else if (ext.matches("png|jpg|jpeg|gif|mp4|mp3|wav|avi")) {
-            tag = "[Media]";
+        } else if (ext.matches("png|jpg|jpeg|gif|webp|svg")) {
+            tag = "[Ảnh]";
+        } else if (ext.matches("mp4|mp3|wav|avi|mov|mkv|webm")) {
+            tag = "[Video]";
         }
         
         document.setStatus(Document.DocumentStatus.UPLOADED);

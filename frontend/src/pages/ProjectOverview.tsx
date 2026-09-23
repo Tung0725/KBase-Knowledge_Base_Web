@@ -5,6 +5,7 @@ import { projectService } from '../services/projectService';
 import type { ProjectOverviewResponse, Document } from '../types/project';
 import { toast } from 'react-hot-toast';
 
+
 const formatBytes = (bytes: number, decimals = 2) => {
   if (!+bytes) return '0 Bytes';
   const k = 1024;
@@ -24,6 +25,9 @@ const ProjectOverview: React.FC = () => {
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Description Expand State
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -82,97 +86,122 @@ const ProjectOverview: React.FC = () => {
 
   const storagePercentage = Math.min(100, (overview.usedStorageBytes / overview.storageQuotaBytes) * 100);
 
-  // SVG Doughnut logic
-  let cumulativePercent = 0;
-  const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
-  const distributionArray = Object.entries(overview.documentTypeDistribution);
-  
-  const getCoordinatesForPercent = (percent: number) => {
-    const x = Math.cos(2 * Math.PI * percent);
-    const y = Math.sin(2 * Math.PI * percent);
-    return [x, y];
-  };
+
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-full flex flex-col gap-6">
-      <div className="bg-surface-container-lowest border border-outline-variant/30 p-6 rounded-2xl shadow-sm relative group">
-        {!isEditing ? (
-          <>
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-3">
-                  <span className="material-symbols-outlined text-primary text-3xl">workspaces</span>
-                  {overview.name}
-                </h3>
-                <p className="text-on-surface-variant whitespace-pre-line">{overview.description || 'Chưa có mô tả'}</p>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-full flex flex-col gap-3">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 p-6 rounded-2xl shadow-sm relative group shrink-0">
+        <div className="flex justify-between items-start">
+          <div className="w-full flex-1 pr-40">
+            <div className="flex items-center gap-3 mb-2 relative">
+              <span className="material-symbols-outlined text-primary text-3xl">workspaces</span>
+              {isEditing ? (
+                <div className="w-full relative">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    maxLength={100}
+                    className="text-2xl font-bold bg-transparent border-b-2 border-primary outline-none w-full pb-1 pr-12"
+                    autoFocus
+                    placeholder="Nhập tên dự án..."
+                  />
+                  <span className="absolute right-2 bottom-2 text-[10px] text-outline font-medium">
+                    {editName.length}/100
+                  </span>
+                </div>
+              ) : (
+                <h3 className="text-2xl font-bold">{overview.name}</h3>
+              )}
+            </div>
+            {isEditing ? (
+              <textarea
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                rows={10}
+                placeholder="Nhập mô tả dự án..."
+                className="w-full bg-transparent border-b border-outline-variant/50 focus:border-b-2 focus:border-primary outline-none resize-y mt-2 pb-2 text-on-surface-variant text-base"
+              ></textarea>
+            ) : (
+              <div className="text-on-surface-variant">
+                <span className="whitespace-pre-line">
+                  {!isDescExpanded && overview.description && overview.description.length > 600
+                    ? overview.description.substring(0, overview.description.lastIndexOf(' ', 600)) + '...'
+                    : (overview.description || 'Chưa có mô tả')}
+                </span>
+                {overview.description && overview.description.length > 600 && (
+                  <button
+                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                    className="text-primary hover:underline text-sm font-semibold ml-2 inline-flex items-center"
+                  >
+                    {isDescExpanded ? 'Thu gọn' : 'Xem thêm'}
+                  </button>
+                )}
               </div>
-              <button 
+            )}
+          </div>
+
+          <div className="absolute top-6 right-6 flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-3 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:bg-outline-variant/20 transition-colors"
+                  disabled={isSaving}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSaveProjectInfo}
+                  disabled={isSaving || !editName.trim()}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1 shadow-sm"
+                >
+                  {isSaving ? <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> : <span className="material-symbols-outlined text-[16px]">save</span>}
+                  Lưu
+                </button>
+              </>
+            ) : (
+              <button
                 onClick={handleEditClick}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg flex items-center justify-center"
+                className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg flex items-center justify-center gap-1"
                 title="Sửa thông tin dự án"
               >
-                <span className="material-symbols-outlined">edit</span>
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+
               </button>
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-1 text-on-surface">Tên dự án</label>
-              <input 
-                type="text" 
-                value={editName} 
-                onChange={(e) => setEditName(e.target.value)}
-                className="w-full bg-surface-container border border-outline-variant/50 rounded-md px-4 py-2 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-1 text-on-surface">Mô tả</label>
-              <textarea 
-                value={editDesc} 
-                onChange={(e) => setEditDesc(e.target.value)}
-                rows={3}
-                className="w-full bg-surface-container border border-outline-variant/50 rounded-md px-4 py-2 outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-y"
-              ></textarea>
-            </div>
-            <div className="flex justify-end gap-2 mt-2">
-              <button 
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-outline-variant/20 transition-colors"
-              >
-                Hủy
-              </button>
-              <button 
-                onClick={handleSaveProjectInfo}
-                disabled={isSaving || !editName.trim()}
-                className="px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {isSaving ? <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> : 'Lưu'}
-              </button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
         <div className="bg-surface-container-lowest border border-outline-variant/30 p-5 rounded-2xl shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-2xl">description</span>
           </div>
-          <div>
+          <div className="shrink-0">
             <p className="text-sm font-medium text-on-surface-variant">Tổng tài liệu</p>
             <p className="text-2xl font-bold">{overview.totalDocuments}</p>
           </div>
-        </div>
 
-        <div className="bg-surface-container-lowest border border-outline-variant/30 p-5 rounded-2xl shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-2xl">group</span>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-on-surface-variant">Thành viên</p>
-            <p className="text-2xl font-bold">{overview.totalMembers}</p>
+          <div className="h-10 w-px bg-outline-variant/30 mx-2 shrink-0"></div>
+
+          <div className="flex flex-col gap-1 w-full flex-1 justify-center">
+            {[
+              { key: '[Tài liệu]', label: 'Tài liệu', color: 'text-blue-600' },
+              { key: '[Ảnh]', label: 'Ảnh', color: 'text-green-600' },
+              { key: '[Video]', label: 'Video', color: 'text-purple-600' }
+            ].map(type => {
+              const count = overview.documentTypeDistribution[type.key] || 0;
+              const percent = overview.totalDocuments > 0 ? Math.round((count / overview.totalDocuments) * 100) : 0;
+              return (
+                <div key={type.key} className="flex items-center justify-between">
+                  <span className={`text-xs font-semibold ${type.color}`}>{type.label}</span>
+                  <span className="text-xs font-bold">{count} <span className="text-[11px] font-normal text-on-surface-variant">({percent}%)</span></span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -184,8 +213,8 @@ const ProjectOverview: React.FC = () => {
             </span>
           </div>
           <div className="w-full bg-outline-variant/30 rounded-full h-2.5 overflow-hidden">
-            <div 
-              className="bg-primary h-2.5 rounded-full transition-all duration-1000 ease-out" 
+            <div
+              className="bg-primary h-2.5 rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${storagePercentage}%` }}
             ></div>
           </div>
@@ -193,74 +222,21 @@ const ProjectOverview: React.FC = () => {
             {formatBytes(overview.usedStorageBytes)} / {formatBytes(overview.storageQuotaBytes)}
           </p>
         </div>
+        
+        <div className="bg-surface-container-lowest border border-outline-variant/30 p-5 rounded-2xl shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-2xl">group</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-on-surface-variant">Thành viên</p>
+            <p className="text-2xl font-bold">{overview.totalMembers}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Doughnut Chart */}
-        <div className="bg-surface-container-lowest border border-outline-variant/30 p-6 rounded-2xl shadow-sm lg:col-span-1">
-          <h4 className="font-bold mb-6 flex items-center gap-2 text-on-surface">
-            <span className="material-symbols-outlined text-primary text-lg">pie_chart</span>
-            Phân bổ loại tài liệu
-          </h4>
-          {distributionArray.length > 0 ? (
-            <div className="flex flex-col items-center">
-              <div className="relative w-40 h-40">
-                <svg viewBox="-1 -1 2 2" className="transform -rotate-90">
-                  {distributionArray.map((item, index) => {
-                    const count = item[1];
-                    const percent = count / overview.totalDocuments;
-                    
-                    const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
-                    cumulativePercent += percent;
-                    const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
-                    const largeArcFlag = percent > 0.5 ? 1 : 0;
-                    
-                    const pathData = [
-                      `M ${startX} ${startY}`,
-                      `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-                      `L 0 0`,
-                    ].join(' ');
-
-                    return (
-                      <path 
-                        key={item[0]} 
-                        d={pathData} 
-                        fill={colors[index % colors.length]}
-                        className="hover:opacity-80 transition-opacity cursor-pointer"
-                      >
-                        <title>{`${item[0]}: ${count}`}</title>
-                      </path>
-                    );
-                  })}
-                  {/* Inner circle for doughnut */}
-                  <circle cx="0" cy="0" r="0.6" className="fill-surface-container-lowest" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center flex-col">
-                  <span className="text-2xl font-bold">{overview.totalDocuments}</span>
-                  <span className="text-xs text-on-surface-variant font-medium">Tài liệu</span>
-                </div>
-              </div>
-              <div className="mt-6 w-full flex flex-col gap-2">
-                {distributionArray.map((item, index) => (
-                  <div key={item[0]} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: colors[index % colors.length] }}></div>
-                      <span className="text-on-surface truncate max-w-[120px]">{item[0]}</span>
-                    </div>
-                    <span className="font-semibold">{item[1]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="h-40 flex items-center justify-center text-on-surface-variant text-sm">
-              Chưa có tài liệu nào.
-            </div>
-          )}
-        </div>
-
+      <div className="flex-1 min-h-0">
         {/* Recent Documents */}
-        <div className="bg-surface-container-lowest border border-outline-variant/30 p-6 rounded-2xl shadow-sm lg:col-span-2 flex flex-col">
+        <div className="bg-surface-container-lowest border border-outline-variant/30 p-6 rounded-2xl shadow-sm flex flex-col h-full">
           <h4 className="font-bold mb-4 flex items-center gap-2 text-on-surface">
             <span className="material-symbols-outlined text-primary text-lg">history</span>
             Tài liệu mới nhất
@@ -272,7 +248,7 @@ const ProjectOverview: React.FC = () => {
                   <div key={doc.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface transition-colors border border-transparent hover:border-outline-variant/30 group">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined">
-                        {doc.tag === '[Tài liệu]' ? 'description' : doc.tag === '[Media]' ? 'perm_media' : 'draft'}
+                        {doc.tag === '[Ảnh]' ? 'image' : doc.tag === '[Video]' ? 'movie' : doc.tag === '[Tài liệu]' ? 'description' : 'draft'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">

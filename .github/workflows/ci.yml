@@ -17,10 +17,10 @@ jobs:
     
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4 # Action kéo code của bạn về máy ảo
+        uses: actions/checkout@v5 # Action kéo code của bạn về máy ảo
         
       - name: Setup Java 17
-        uses: actions/setup-java@v4 # Cài Java
+        uses: actions/setup-java@v5 # Cài Java
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -38,10 +38,10 @@ jobs:
     
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         
       - name: Setup Node.js
-        uses: actions/setup-node@v4 # Cài NodeJS
+        uses: actions/setup-node@v5 # Cài NodeJS
         with:
           node-version: '20'
           cache: 'npm'

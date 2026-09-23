@@ -13,13 +13,23 @@ export const authService = {
     return response.data.data;
   },
   
-  register: async (data: any): Promise<AuthResponse> => {
+  register: async (data: any): Promise<{ data: AuthResponse, message: string }> => {
     const response = await apiClient.post<any>('/auth/register', data);
-    return response.data.data;
+    return { data: response.data.data, message: response.data.message };
+  },
+  
+  verifyEmail: async (token: string): Promise<any> => {
+    const response = await apiClient.get<any>(`/auth/verify?token=${token}`);
+    return response.data;
   },
   
   getCurrentUser: async (): Promise<AuthResponse> => {
     const response = await apiClient.get<any>('/auth/me');
+    return response.data.data;
+  },
+  
+  googleLogin: async (data: { token: string }): Promise<AuthResponse> => {
+    const response = await apiClient.post<any>('/auth/google', data);
     return response.data.data;
   }
 };

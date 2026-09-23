@@ -16,6 +16,7 @@ public class RegisterRequest {
     
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
+    @Pattern(regexp = "^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$", message = "Email không hợp lệ")
     private String email;
 
     @NotBlank(message = "Password is required")
@@ -24,4 +25,13 @@ public class RegisterRequest {
             message = "Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character"
     )
     private String password;
+
+    @NotBlank(message = "Confirm Password is required")
+    private String confirmPassword;
+
+    @NotBlank(message = "Họ tên không được để trống")
+    private String fullName;
+
+    @Pattern(regexp = "^\\d{10,15}$", message = "Số điện thoại không hợp lệ (chỉ chứa số, 10-15 ký tự)")
+    private String phoneNumber;
 }

@@ -1,6 +1,6 @@
 package com.kbase.repository;
 
-import com.kbase.entity.User;
+import com.kbase.entity.VerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,11 +12,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, UUID> {
-    Optional<User> findByEmail(String email);
-    boolean existsByEmail(String email);
+public interface VerificationTokenRepository extends JpaRepository<VerificationToken, UUID> {
+    Optional<VerificationToken> findByToken(String token);
+    
+    void deleteByUser_Id(UUID userId);
 
     @Modifying
-    @Query("DELETE FROM User u WHERE u.isVerified = false AND u.createdAt < :time")
-    void deleteUnverifiedUsersOlderThan(@Param("time") LocalDateTime time);
+    @Query("DELETE FROM VerificationToken v WHERE v.expiryDate < :time")
+    void deleteExpiredTokens(@Param("time") LocalDateTime time);
 }

@@ -18,9 +18,20 @@ Toàn bộ logic Backend được chia thành các Layer tiêu chuẩn:
 ### Entity: `User` (Bảng `users`)
 - `id` (UUID, PK)
 - `email` (String, Unique, Not Null)
-- `password` (String, BCrypt Hashed)
+- `password` (String, BCrypt Hashed - Nullable nếu đăng nhập Google)
+- `full_name` (String, Not Null)
+- `phone_number` (String, Nullable)
+- `provider` (Enum: `LOCAL`, `GOOGLE` - Định danh nguồn đăng nhập)
+- `is_verified` (Boolean, Default: false)
 - `role` (Enum: `ADMIN`, `OWNER`, `USER`)
-- **Relationships:** `@OneToMany` với `Project` (Một owner có nhiều project), `@OneToMany` với `ProjectMember`.
+- **Relationships:** `@OneToMany` với `Project` (Một owner có nhiều project), `@OneToMany` với `ProjectMember`, `@OneToOne` với `VerificationToken`.
+
+### Entity: `VerificationToken` (Bảng `verification_tokens`)
+- `id` (UUID, PK)
+- `token` (String, Unique, Not Null)
+- `user_id` (UUID, FK tới `users`)
+- `expiry_date` (Timestamp, Not Null)
+- **Relationships:** `@OneToOne` với `User`.
 
 ### Entity: `Project` (Bảng `projects`)
 - `id` (UUID, PK)
@@ -54,18 +65,24 @@ Toàn bộ logic Backend được chia thành các Layer tiêu chuẩn:
 
 ### ADR-1: Luồng tải lên tệp tin lớn (Direct Client-to-MinIO Upload)
 - **Context:** Hệ thống cho phép tải lên Video (kích thước lên tới 1GB). Nếu để Backend làm proxy tải file, Backend sẽ tốn băng thông và RAM, dễ bị crash (OOM) nếu nhiều user tải cùng lúc.
-- **Options:** 
-  - (A) Backend Proxy (Client -> Spring Boot -> MinIO).
-  - (B) Direct Upload via Pre-signed URL (Client -> MinIO).
-- **Decision:** Chọn **Option B**. Client gọi Backend để xin Pre-signed URL, tải trực tiếp lên MinIO bằng lệnh PUT. Sau đó gọi lại Backend (`/api/projects/{id}/documents/confirm`) để xác nhận tải thành công và trừ Quota.
-- **Consequences:** Backend được tối ưu tải 100%. Đổi lại, Client phải xử lý luồng gọi 2 API (Request URL và Confirm) thay vì 1 API. Có khả năng rác MinIO nếu Client xin URL nhưng không up (cần config MinIO Lifecycle tự động dọn rác).
+- **Decision:** Chọn **Option B**. Client gọi Backend để xin Pre-signed URL, tải trực tiếp lên MinIO bằng lệnh PUT. Sau đó gọi lại Backend để xác nhận tải thành công và trừ Quota.
+
+### ADR-2: Cơ chế chống Spam (Rate Limiting)
+- **Context:** Kẻ tấn công có thể dùng bot gọi API Đăng ký liên tục với nhiều email ảo khác nhau.
+- **Decision:** Sử dụng thư viện `Bucket4j` chặn spam dựa trên Địa chỉ IP ở tầng Controller thay vì chặn theo Email. Không dùng Redis để tiết kiệm chi phí RAM/Hạ tầng cho dự án.
+
+### ADR-3: Quản lý Rác dữ liệu (Garbage Collector)
+- **Context:** Khi có tính năng gửi Email xác thực, DB sẽ xuất hiện nhiều tài khoản ảo chưa được kích hoạt, hoặc Token thừa thãi.
+- **Decision:** Dùng `@Scheduled` của Spring Boot quét vào 3:00 Sáng mỗi ngày, tự động xóa các Token hết hạn (sau 24h) và các User chưa Verify (is_verified = false, createdAt > 24h).
 
 ## 5. Interface Contracts (API Design)
 *Tất cả API trả về chuẩn HTTP Status (200 OK, 201 Created, 400 Bad Request, 403 Forbidden, 404 Not Found, 500 Internal Error).*
 
 ### IAM APIs
-- `POST /api/auth/register` (Body: email, password) -> 201 Created
+- `POST /api/auth/register` (Body: email, password, fullName, phoneNumber) -> 201 Created
 - `POST /api/auth/login` (Body: email, password) -> 200 OK (Trả về JWT)
+- `POST /api/auth/google` (Body: token) -> 200 OK (Trả về JWT)
+- `GET /api/auth/verify?token=...` -> 200 OK
 
 ### Project APIs
 - `POST /api/projects` (Header: Bearer Token, Body: name, description) -> 201 Created

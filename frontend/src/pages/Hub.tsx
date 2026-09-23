@@ -24,6 +24,10 @@ const Hub: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
 
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'MINE' | 'SHARED'>('ALL');
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setDropdownOpenId(null);
@@ -67,6 +71,130 @@ const Hub: React.FC = () => {
     return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
   };
 
+  const filteredProjects = projects.filter(project => {
+    // Standard tab filter when not searching
+    let matchesTab = true;
+    if (activeTab === 'MINE') {
+      matchesTab = project.ownerId === user?.userId;
+    } else if (activeTab === 'SHARED') {
+      matchesTab = project.ownerId !== user?.userId;
+    }
+    return matchesTab;
+  });
+
+  const searchResults = projects.filter(project => {
+    return project.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+           (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  });
+
+  const myProjectsMatch = searchResults.filter(p => p.ownerId === user?.userId);
+  const sharedProjectsMatch = searchResults.filter(p => p.ownerId !== user?.userId);
+
+  const renderProjectGrid = (projectList: Project[]) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+      {projectList.map((project) => (
+        <article 
+          key={project.id} 
+          onClick={() => navigate(`/projects/${project.id}`)}
+          className="group relative bg-surface-container-lowest hover:bg-surface-container-lowest/80 border border-outline-variant/30 rounded-2xl p-5 flex flex-col justify-between min-h-[220px] cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+        >
+          <div>
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl font-bold font-display shadow-xs">
+                {project.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="relative">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDropdownOpenId(dropdownOpenId === project.id ? null : project.id);
+                  }}
+                  className="text-outline hover:text-on-surface p-1 rounded-md transition-colors opacity-0 group-hover:opacity-100" 
+                  title="Tùy chọn khác"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="5" r="1.5"></circle>
+                    <circle cx="12" cy="12" r="1.5"></circle>
+                    <circle cx="12" cy="19" r="1.5"></circle>
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {dropdownOpenId === project.id && (
+                    <motion.div
+                      key="dropdown-menu"
+                      initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-1 w-36 bg-surface-container-lowest border border-outline-variant/30 rounded-md shadow-lg py-1.5 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setIsSettingsModalOpen(true);
+                          setDropdownOpenId(null);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">settings</span>
+                        Cài đặt
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedProject(project);
+                          setIsDeleteModalOpen(true);
+                          setDropdownOpenId(null);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-error hover:bg-error-container/20 transition-colors flex items-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                        Xóa dự án
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            <h3 className="font-bold text-on-surface text-[17px] leading-snug line-clamp-2 mb-2 font-display flex items-center gap-2">
+              {project.name}
+              {project.isPublic && (
+                <span className="material-symbols-outlined text-[16px] text-on-surface-variant" title="Công khai">public</span>
+              )}
+            </h3>
+            {project.description && (
+              <p className="text-sm text-on-surface-variant line-clamp-2">
+                {project.description}
+              </p>
+            )}
+          </div>
+
+          <div className="pt-4 mt-4 border-t border-outline-variant/20 flex flex-col gap-2">
+            <div className="flex items-center justify-between text-[11px] text-on-surface-variant font-medium">
+              <span>Đã dùng: {formatBytes(project.usedStorageBytes)}</span>
+              <span>Tối đa: {formatBytes(project.storageQuotaBytes)}</span>
+            </div>
+            <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary rounded-full transition-all" 
+                style={{ width: `${Math.min(100, (project.usedStorageBytes / project.storageQuotaBytes) * 100)}%` }}
+              ></div>
+            </div>
+            <div className="flex items-center justify-between text-xs text-on-surface-variant font-medium mt-1">
+              <span>Tạo: {formatDate(project.createdAt)}</span>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${project.ownerId === user?.userId ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
+                {project.ownerId === user?.userId ? 'Owner' : 'Shared'}
+              </span>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -88,7 +216,55 @@ const Hub: React.FC = () => {
       );
     }
 
-    if (projects.length === 0 && !error) {
+    if (searchQuery) {
+      if (searchResults.length === 0) {
+        return (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface-container-lowest rounded-3xl border border-outline-variant/30 border-dashed">
+            <span className="material-symbols-outlined text-5xl mb-4 text-outline-variant">search_off</span>
+            <h3 className="text-lg font-bold text-on-surface mb-2">Không tìm thấy kết quả nào</h3>
+            <p className="text-on-surface-variant text-sm max-w-md mx-auto">
+              Không có dự án nào khớp với từ khóa "{searchQuery}".
+            </p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex flex-col gap-10">
+          {myProjectsMatch.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+                Dự án của tôi <span className="bg-primary-container text-white text-xs px-2 py-0.5 rounded-full">{myProjectsMatch.length}</span>
+              </h3>
+              {renderProjectGrid(myProjectsMatch)}
+            </div>
+          )}
+          {sharedProjectsMatch.length > 0 && (
+            <div>
+              <h3 className="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+                Được chia sẻ với tôi <span className="bg-secondary text-white text-xs px-2 py-0.5 rounded-full">{sharedProjectsMatch.length}</span>
+              </h3>
+              {renderProjectGrid(sharedProjectsMatch)}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (filteredProjects.length === 0 && !error) {
+      if (activeTab !== 'ALL') {
+        return (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface-container-lowest rounded-3xl border border-outline-variant/30 border-dashed">
+            <span className="material-symbols-outlined text-5xl mb-4 text-outline-variant">folder_off</span>
+            <h3 className="text-lg font-bold text-on-surface mb-2">Không có dự án nào</h3>
+            <p className="text-on-surface-variant text-sm max-w-md mx-auto">
+              Bạn chưa có dự án nào trong mục này.
+            </p>
+          </div>
+        );
+      }
+
+      // Default empty state
       return (
         <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-surface-container-lowest rounded-3xl border border-outline-variant/30 border-dashed">
           <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
@@ -111,112 +287,11 @@ const Hub: React.FC = () => {
       );
     }
 
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-        {projects.map((project) => (
-          <article 
-            key={project.id} 
-            onClick={() => navigate(`/projects/${project.id}`)}
-            className="group relative bg-surface-container-lowest hover:bg-surface-container-lowest/80 border border-outline-variant/30 rounded-2xl p-5 flex flex-col justify-between min-h-[220px] cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
-          >
-            <div>
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl font-bold font-display shadow-xs">
-                  {project.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="relative">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDropdownOpenId(dropdownOpenId === project.id ? null : project.id);
-                    }}
-                    className="text-outline hover:text-on-surface p-1 rounded-md transition-colors opacity-0 group-hover:opacity-100" 
-                    title="Tùy chọn khác"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <circle cx="12" cy="5" r="1.5"></circle>
-                      <circle cx="12" cy="12" r="1.5"></circle>
-                      <circle cx="12" cy="19" r="1.5"></circle>
-                    </svg>
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {dropdownOpenId === project.id && (
-                      <motion.div
-                        key="dropdown-menu"
-                        initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-full mt-1 w-36 bg-surface-container-lowest border border-outline-variant/30 rounded-md shadow-lg py-1.5 z-10"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setIsSettingsModalOpen(true);
-                            setDropdownOpenId(null);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">settings</span>
-                          Cài đặt
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedProject(project);
-                            setIsDeleteModalOpen(true);
-                            setDropdownOpenId(null);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-error hover:bg-error-container/20 transition-colors flex items-center gap-2"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
-                          Xóa dự án
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <h3 className="font-bold text-on-surface text-[17px] leading-snug line-clamp-2 mb-2 font-display flex items-center gap-2">
-                {project.name}
-                {project.isPublic && (
-                  <span className="material-symbols-outlined text-[16px] text-on-surface-variant" title="Công khai">public</span>
-                )}
-              </h3>
-              {project.description && (
-                <p className="text-sm text-on-surface-variant line-clamp-2">
-                  {project.description}
-                </p>
-              )}
-            </div>
-
-            <div className="pt-4 mt-4 border-t border-outline-variant/20 flex flex-col gap-2">
-              <div className="flex items-center justify-between text-[11px] text-on-surface-variant font-medium">
-                <span>Đã dùng: {formatBytes(project.usedStorageBytes)}</span>
-                <span>Tối đa: {formatBytes(project.storageQuotaBytes)}</span>
-              </div>
-              <div className="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary rounded-full transition-all" 
-                  style={{ width: `${Math.min(100, (project.usedStorageBytes / project.storageQuotaBytes) * 100)}%` }}
-                ></div>
-              </div>
-              <div className="flex items-center justify-between text-xs text-on-surface-variant font-medium mt-1">
-                <span>Tạo: {formatDate(project.createdAt)}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">Owner</span>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    );
+    return renderProjectGrid(filteredProjects);
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }} className="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
+    <div className="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 px-6 py-3.5 transition-all shadow-sm">
@@ -236,7 +311,13 @@ const Hub: React.FC = () => {
                   <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
                 </svg>
               </span>
-              <input className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-lowest border border-outline-variant/50 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-outline shadow-sm" placeholder="Tìm kiếm dự án, tài liệu..." type="text" />
+              <input 
+                className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-lowest border border-outline-variant/50 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-outline shadow-sm" 
+                placeholder="Tìm kiếm dự án, mô tả..." 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
 
@@ -272,36 +353,54 @@ const Hub: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-[1720px] w-full mx-auto px-6 py-8">
+      <motion.main initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }} className="flex-1 max-w-[1720px] w-full mx-auto px-6 py-8">
         {/* Actions Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-          <nav aria-label="Tabs" className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
-            <button className="px-4 py-2 rounded-full text-sm font-semibold bg-primary-container text-white shadow-sm transition-all whitespace-nowrap">
-              Dự án của tôi
-            </button>
-            <button className="px-4 py-2 rounded-full text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all whitespace-nowrap">
-              Được chia sẻ với tôi
-            </button>
-          </nav>
+        {!searchQuery && (
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+            <nav aria-label="Tabs" className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
+              <button 
+                onClick={() => setActiveTab('ALL')}
+                className={`px-4 py-2 rounded-full text-sm transition-all whitespace-nowrap ${activeTab === 'ALL' ? 'font-semibold bg-primary-container text-white shadow-sm' : 'font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container'}`}
+              >
+                Tất cả dự án
+              </button>
+              <button 
+                onClick={() => setActiveTab('MINE')}
+                className={`px-4 py-2 rounded-full text-sm transition-all whitespace-nowrap ${activeTab === 'MINE' ? 'font-semibold bg-primary-container text-white shadow-sm' : 'font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container'}`}
+              >
+                Dự án của tôi
+              </button>
+              <button 
+                onClick={() => setActiveTab('SHARED')}
+                className={`px-4 py-2 rounded-full text-sm transition-all whitespace-nowrap ${activeTab === 'SHARED' ? 'font-semibold bg-primary-container text-white shadow-sm' : 'font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container'}`}
+              >
+                Được chia sẻ với tôi
+              </button>
+            </nav>
 
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-container hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
-              </svg>
-              <span>Dự án mới</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-container hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
+                </svg>
+                <span>Dự án mới</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Section Title */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-on-surface tracking-tight">Tất cả dự án</h2>
+          <h2 className="text-xl font-bold text-on-surface tracking-tight">
+            {searchQuery 
+              ? `Kết quả tìm kiếm cho "${searchQuery}"` 
+              : activeTab === 'ALL' ? 'Tất cả dự án' : activeTab === 'MINE' ? 'Dự án của tôi' : 'Được chia sẻ với tôi'}
+          </h2>
           <div className="text-sm text-on-surface-variant">
-            Hiển thị <span className="font-semibold text-on-surface">{projects.length}</span> dự án
+            Tìm thấy <span className="font-semibold text-on-surface">{searchQuery ? searchResults.length : filteredProjects.length}</span> dự án
           </div>
         </div>
 
@@ -315,9 +414,9 @@ const Hub: React.FC = () => {
 
         {/* Content Grid */}
         {renderContent()}
-      </main>
+      </motion.main>
 
-      <footer className="mt-auto border-t border-outline-variant/30 bg-surface-container-lowest py-5 px-6 text-xs text-on-surface-variant">
+      <footer className="mt-auto border-t border-outline-variant/30 bg-surface-container-lowest py-1 px-6 text-xs text-on-surface-variant">
         <div className="max-w-[1720px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 font-medium">
             <span className="font-bold text-on-surface">KBase Hub</span>
@@ -349,7 +448,7 @@ const Hub: React.FC = () => {
         onSuccess={loadProjects}
         project={selectedProject}
       />
-    </motion.div>
+    </div>
   );
 };
 

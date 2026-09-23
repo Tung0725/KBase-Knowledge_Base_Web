@@ -26,9 +26,12 @@
 - **Type:** Feature | **Priority:** High | **Estimate:** 4 Hrs | **Status:** [x] Done
 - **User Story:** As a User, I want to sign up and log in so that I can securely access my workspace.
 - **Acceptance Criteria (AC):**
-  - [x] Backend: API `/api/auth/register` (BCrypt password), `/api/auth/login` (Generate JWT) và `/api/auth/me`.
-  - [x] Frontend: Giao diện Auth (Login/Signup form). Xử lý lưu JWT vào `localStorage`/`cookies`.
-  - [x] Bắt lỗi: Email đã tồn tại, Sai mật khẩu (Xử lý qua GlobalExceptionHandler ở Backend).
+  - [x] Backend: API `/api/auth/register`, `/api/auth/login` và `/api/auth/me`.
+  - [x] Backend: Tích hợp Đăng nhập bằng Google (`/api/auth/google`).
+  - [x] Backend: Tích hợp Xác thực Email qua Gửi Link Token (`/api/auth/verify`).
+  - [x] Security: Chống Spam đăng ký (Rate Limiting) với Bucket4j và Dọn rác DB với `@Scheduled`.
+  - [x] Frontend: Giao diện Auth (Login/Signup form). Có nút "Đăng nhập Google". Xử lý lưu JWT.
+  - [x] Bắt lỗi: Email đã tồn tại, Sai mật khẩu, Link hết hạn, Spam.
 
 ## Day 2: Quản lý Dự án (Project Workspace)
 
@@ -78,20 +81,20 @@
 ## Day 4: Trải nghiệm Lưu trữ (Frontend UI)
 
 ### [TASK-07] Giao diện Drag & Drop Upload
-- **Type:** Frontend Core | **Priority:** High | **Estimate:** 5 Hrs | **Status:** [ ] Todo
+- **Type:** Frontend Core | **Priority:** High | **Estimate:** 5 Hrs | **Status:** [x] Done
 - **User Story:** As a Project Member, I want to drag and drop files with a progress bar so that I can upload large videos reliably.
 - **Acceptance Criteria (AC):**
-  - [ ] UI Component kéo thả file (hỗ trợ chọn nhiều file).
-  - [ ] Trình tự gọi API đúng chuẩn Option B: Xin Pre-signed URL -> PUT file lên MinIO -> Báo Confirm Upload thành công.
-  - [ ] Hiển thị thanh Progress bar cho từng file khi PUT lên MinIO.
+  - [x] UI Component kéo thả file (hỗ trợ chọn nhiều file).
+  - [x] Trình tự gọi API đúng chuẩn Option B: Xin Pre-signed URL -> PUT file lên MinIO -> Báo Confirm Upload thành công.
+  - [x] Hiển thị thanh Progress bar cho từng file khi PUT lên MinIO.
 
 ### [TASK-08] Danh sách File & Download
-- **Type:** Feature | **Priority:** High | **Estimate:** 3 Hrs | **Status:** [ ] Todo
+- **Type:** Feature | **Priority:** High | **Estimate:** 3 Hrs | **Status:** [x] Done
 - **User Story:** As a Project Member, I want to view and download files so that I can access shared knowledge.
 - **Acceptance Criteria (AC):**
-  - [ ] Giao diện danh sách file theo dạng List/Table. Có icon theo định dạng (PDF, Video). Hiển thị Tag.
-  - [ ] Click vào file -> Gọi API `download-url` -> Tải file về máy.
-  - [ ] UI cảnh báo Quota (vd: Progress bar hiển thị `Đã dùng 1GB/5GB`).
+  - [x] Giao diện danh sách file theo dạng List/Table. Có icon theo định dạng (PDF, Video). Hiển thị Tag.
+  - [x] Click vào file -> Gọi API `download-url` -> Tải file về máy.
+  - [x] UI cảnh báo Quota (vd: Progress bar hiển thị `Đã dùng 1GB/5GB`).
 
 ## Day 5 - Day 7: Testing & Bug Fixing
 
