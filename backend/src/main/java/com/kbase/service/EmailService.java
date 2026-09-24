@@ -30,7 +30,7 @@ public class EmailService {
                     "Cảm ơn bạn đã đăng ký tài khoản trên KBase.\n" +
                     "Vui lòng click vào đường link bên dưới để xác thực email và kích hoạt tài khoản của bạn:\n\n" +
                     verificationUrl + "\n\n" +
-                    "Lưu ý: Link này sẽ hết hạn trong 24 giờ.\n\n" +
+                    "Lưu ý: Link này sẽ hết hạn trong 1 giờ.\n\n" +
                     "Trân trọng,\nĐội ngũ KBase.");
             
             javaMailSender.send(message);

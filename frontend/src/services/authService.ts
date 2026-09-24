@@ -5,6 +5,9 @@ export interface AuthResponse {
   email: string;
   role: string;
   userId: string;
+  fullName?: string;
+  phoneNumber?: string;
+  hasPassword?: boolean;
 }
 
 export const authService = {
@@ -31,5 +34,15 @@ export const authService = {
   googleLogin: async (data: { token: string }): Promise<AuthResponse> => {
     const response = await apiClient.post<any>('/auth/google', data);
     return response.data.data;
+  },
+
+  updateProfile: async (data: { fullName: string; phoneNumber?: string }): Promise<AuthResponse> => {
+    const response = await apiClient.put<any>('/users/profile', data);
+    return response.data.data;
+  },
+
+  changePassword: async (data: any): Promise<void> => {
+    const response = await apiClient.put<any>('/users/password', data);
+    return response.data;
   }
 };

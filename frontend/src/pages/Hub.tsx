@@ -272,17 +272,21 @@ const Hub: React.FC = () => {
           </div>
           <h3 className="text-xl font-bold text-on-surface mb-2">Bạn chưa có dự án nào</h3>
           <p className="text-on-surface-variant max-w-md mx-auto mb-8 text-sm">
-            Tạo không gian làm việc đầu tiên của bạn để bắt đầu lưu trữ tài liệu, quản lý tri thức và chia sẻ cùng đội ngũ.
+            {user?.role === 'USER'
+              ? 'Bạn chưa tham gia dự án nào. Hãy đợi người quản trị (Owner) mời bạn vào dự án để bắt đầu làm việc.'
+              : 'Tạo không gian làm việc đầu tiên của bạn để bắt đầu lưu trữ tài liệu, quản lý tri thức và chia sẻ cùng đội ngũ.'}
           </p>
-          <button 
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-primary-container hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
-            </svg>
-            <span>Tạo dự án ngay</span>
-          </button>
+          {user?.role !== 'USER' && (
+            <button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-primary-container hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
+              </svg>
+              <span>Tạo dự án ngay</span>
+            </button>
+          )}
         </div>
       );
     }
@@ -322,14 +326,12 @@ const Hub: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative group cursor-pointer" title={user?.email || "User Profile"}>
-              <div className="w-9 h-9 rounded-full ring-2 ring-primary/20 overflow-hidden bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-bold text-primary">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </span>
+            <Link to="/profile" className="flex items-center gap-3 bg-surface-container-lowest px-2 py-1 rounded-full border border-outline-variant/30 hover:bg-surface-container transition-colors" title={user?.email || "User Profile"}>
+              <span className="text-sm font-medium text-on-surface-variant hidden md:block pl-2">{user?.email}</span>
+              <div className="w-7 h-7 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-surface"></span>
-            </div>
+            </Link>
 
             <button
               onClick={toggleTheme}
@@ -379,15 +381,17 @@ const Hub: React.FC = () => {
             </nav>
 
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-container hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
-                </svg>
-                <span>Dự án mới</span>
-              </button>
+              {user?.role !== 'USER' && (
+                <button 
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-container hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5"></path>
+                  </svg>
+                  <span>Dự án mới</span>
+                </button>
+              )}
             </div>
           </div>
         )}

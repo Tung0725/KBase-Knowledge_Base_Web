@@ -18,6 +18,9 @@ import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -48,6 +51,10 @@ public class DocumentService {
     }
 
     private void checkProjectAccess(UUID projectId, User user, boolean requireWriteAccess) {
+        if (user.getRole() == User.Role.ADMIN) {
+            return; // Admin has full access
+        }
+
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
 
@@ -114,6 +121,9 @@ public class DocumentService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "project_overview", key = "#projectId")
+    })
     public DocumentResponse confirmUpload(UUID projectId, UUID documentId) {
         User currentUser = getCurrentAuthenticatedUser();
         checkProjectAccess(projectId, currentUser, true);
@@ -221,6 +231,9 @@ public class DocumentService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "project_overview", key = "#projectId")
+    })
     public DocumentResponse updateDocument(UUID projectId, UUID documentId, UpdateDocumentRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
         checkProjectAccess(projectId, currentUser, true); // Require write access
@@ -240,6 +253,9 @@ public class DocumentService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "project_overview", key = "#projectId")
+    })
     public void deleteDocument(UUID projectId, UUID documentId) {
         User currentUser = getCurrentAuthenticatedUser();
         checkProjectAccess(projectId, currentUser, true); // Require write access

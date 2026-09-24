@@ -27,6 +27,16 @@ services:
       - kbase_minio_data:/data
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: kbase_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - kbase_redis_data:/data
+    restart: unless-stopped
+
 volumes:
   kbase_pg_data:
   kbase_minio_data:
+  kbase_redis_data:

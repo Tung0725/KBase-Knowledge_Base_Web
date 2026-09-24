@@ -44,11 +44,14 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
     navigate('/auth');
   };
 
+  const isAdminRoute = location.pathname.startsWith('/admin/');
+  const basePath = isAdminRoute ? `/admin/projects/${projectId}` : `/projects/${projectId}`;
+
   const navItems = [
-    { id: 'overview', label: 'Tổng quan', icon: 'dashboard', path: `/projects/${projectId}` },
-    { id: 'documents', label: 'Tài liệu', icon: 'description', path: `/projects/${projectId}/documents` },
-    { id: 'members', label: 'Thành viên', icon: 'group', path: `/projects/${projectId}/members` },
-    { id: 'settings', label: 'Cài đặt', icon: 'settings', path: `/projects/${projectId}/settings` },
+    { id: 'overview', label: 'Tổng quan', icon: 'dashboard', path: `${basePath}` },
+    { id: 'documents', label: 'Tài liệu', icon: 'description', path: `${basePath}/documents` },
+    { id: 'members', label: 'Thành viên', icon: 'group', path: `${basePath}/members` },
+    { id: 'settings', label: 'Cài đặt', icon: 'settings', path: `${basePath}/settings` },
   ];
 
   return (
@@ -57,7 +60,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
       {/* Sidebar */}
       <aside className={`bg-surface-container-lowest border-r border-outline-variant/30 flex flex-col transition-all duration-300 flex-shrink-0 z-20 ${isSidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className={`h-14 shrink-0 flex items-center border-b border-outline-variant/30 ${isSidebarCollapsed ? 'justify-center px-0' : 'px-6'}`}>
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <Link to={isAdminRoute ? "/admin/projects" : "/hub"} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src={logoImg} alt="KBase Logo" className="w-8 h-auto object-contain shrink-0" />
             {!isSidebarCollapsed && <span className="text-xl font-bold tracking-tight text-on-surface">KBase</span>}
           </Link>
@@ -75,7 +78,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
           {/* Navigation */}
           <nav className="flex-1 flex flex-col gap-1 mt-2">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path || (item.id === 'overview' && location.pathname === `/projects/${projectId}/`);
+              const isActive = location.pathname === item.path || (item.id === 'overview' && location.pathname === `${basePath}/`);
               return (
                 <Link
                   key={item.id}
@@ -149,7 +152,11 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
             </button>
 
             <div className="flex items-center text-sm font-medium text-on-surface-variant">
-              <Link to="/hub" className="hover:text-primary transition-colors">Hub</Link>
+              {isAdminRoute ? (
+                <Link to="/admin/projects" className="hover:text-primary transition-colors">Admin</Link>
+              ) : (
+                <Link to="/hub" className="hover:text-primary transition-colors">Hub</Link>
+              )}
               <span className="material-symbols-outlined text-[18px] mx-1">chevron_right</span>
               <span className="text-on-surface font-semibold max-w-[200px] truncate">{projectName}</span>
             </div>
@@ -178,14 +185,12 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
               </span>
             </button>
 
-            <div className="relative group cursor-pointer" title={user?.email || "User Profile"}>
-              <div className="w-8 h-8 rounded-full ring-2 ring-primary/20 overflow-hidden bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-bold text-primary">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </span>
+            <Link to="/profile" className="flex items-center gap-3 bg-surface-container-lowest px-2 py-1 rounded-full border border-outline-variant/30 hover:bg-surface-container transition-colors" title={user?.email || "User Profile"}>
+              <span className="text-sm font-medium text-on-surface-variant hidden md:block pl-2">{user?.email}</span>
+              <div className="w-7 h-7 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-surface"></span>
-            </div>
+            </Link>
 
             <button 
               onClick={handleLogout}

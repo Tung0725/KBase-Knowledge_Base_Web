@@ -26,7 +26,7 @@ public class ProjectController {
 
     /**
      * Business Purpose: Creates a new project for the authenticated user.
-     * Role Permissions: Authenticated User.
+     * Role Permissions: System Role ADMIN or OWNER.
      *
      * @param request Validated payload containing project name and description.
      * @return ApiResponse containing the created ProjectResponse.

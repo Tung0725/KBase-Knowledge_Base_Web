@@ -19,14 +19,13 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.kbase.dto.request.GoogleLoginRequest;
-import com.kbase.entity.VerificationToken;
-import com.kbase.repository.VerificationTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service responsible for handling Authentication business logic.
@@ -40,7 +39,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final VerificationTokenRepository tokenRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final EmailService emailService;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
@@ -55,7 +54,6 @@ public class AuthService {
      * @param request The registration details containing email and password.
      * @return AuthResponse containing the generated JWT token and user details.
      */
-    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
@@ -65,36 +63,28 @@ public class AuthService {
             throw new IllegalArgumentException("Email is already in use");
         }
 
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
-                .phoneNumber(request.getPhoneNumber())
-                .role(User.Role.USER)
-                .authProvider(User.AuthProvider.LOCAL)
-                .isVerified(false)
-                .build();
-
-        userRepository.save(user);
+        // Encode password before storing in Redis
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        request.setConfirmPassword(null); // Clear confirm password
 
         // Generate verification token
         String token = UUID.randomUUID().toString();
-        VerificationToken verificationToken = VerificationToken.builder()
-                .token(token)
-                .user(user)
-                .expiryDate(LocalDateTime.now().plusHours(24))
-                .build();
-        tokenRepository.save(verificationToken);
+        
+        // Save to Redis with 1 hour TTL
+        redisTemplate.opsForValue().set("register:" + token, request, 1, TimeUnit.HOURS);
 
         // Send email
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        emailService.sendVerificationEmail(request.getEmail(), token);
 
         // Do not return JWT token before verification
         return AuthResponse.builder()
                 .token(null)
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .userId(user.getId())
+                .email(request.getEmail())
+                .role(User.Role.USER.name())
+                .userId(null) // User not created yet
+                .fullName(request.getFullName())
+                .phoneNumber(request.getPhoneNumber())
+                .hasPassword(true)
                 .build();
     }
 
@@ -110,6 +100,14 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (user.isDeleted()) {
+            throw new IllegalArgumentException("Tài khoản không tồn tại hoặc đã bị vô hiệu hóa.");
+        }
+        
+        if (user.isLocked()) {
+            throw new IllegalArgumentException("Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+        }
 
         if (!user.isVerified() && user.getAuthProvider() == User.AuthProvider.LOCAL) {
             throw new IllegalArgumentException("Tài khoản chưa được xác thực. Vui lòng kiểm tra email.");
@@ -129,6 +127,9 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .userId(user.getId())
+                .fullName(user.getFullName())
+                .phoneNumber(user.getPhoneNumber())
+                .hasPassword(user.getPassword() != null && !"NO_PASSWORD_GOOGLE_OAUTH".equals(user.getPassword()))
                 .build();
     }
 
@@ -154,6 +155,9 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .userId(user.getId())
+                .fullName(user.getFullName())
+                .phoneNumber(user.getPhoneNumber())
+                .hasPassword(user.getPassword() != null && !"NO_PASSWORD_GOOGLE_OAUTH".equals(user.getPassword()))
                 .build();
     }
 
@@ -180,7 +184,7 @@ public class AuthService {
                     user = User.builder()
                             .email(email)
                             .fullName(name)
-                            .avatarUrl(pictureUrl)
+
                             .role(User.Role.USER)
                             .authProvider(User.AuthProvider.GOOGLE)
                             .password("NO_PASSWORD_GOOGLE_OAUTH")
@@ -194,6 +198,9 @@ public class AuthService {
                         .email(user.getEmail())
                         .role(user.getRole().name())
                         .userId(user.getId())
+                        .fullName(user.getFullName())
+                        .phoneNumber(user.getPhoneNumber())
+                        .hasPassword(user.getPassword() != null && !"NO_PASSWORD_GOOGLE_OAUTH".equals(user.getPassword()))
                         .build();
             } else {
                 throw new IllegalArgumentException("Invalid Google token");
@@ -205,18 +212,35 @@ public class AuthService {
 
     @Transactional
     public void verifyEmail(String token) {
-        VerificationToken verificationToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Token xác thực không hợp lệ."));
-
-        if (verificationToken.isExpired()) {
-            throw new IllegalArgumentException("Token xác thực đã hết hạn. Vui lòng yêu cầu gửi lại email.");
+        String redisKey = "register:" + token;
+        Object cachedData = redisTemplate.opsForValue().get(redisKey);
+        
+        if (cachedData == null) {
+            throw new IllegalArgumentException("Token xác thực không hợp lệ hoặc đã hết hạn.");
+        }
+        
+        // Use Jackson to map Object to RegisterRequest
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        RegisterRequest request = mapper.convertValue(cachedData, RegisterRequest.class);
+        
+        if (userRepository.existsByEmail(request.getEmail())) {
+            redisTemplate.delete(redisKey);
+            throw new IllegalArgumentException("Email này đã được sử dụng.");
         }
 
-        User user = verificationToken.getUser();
-        user.setVerified(true);
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(request.getPassword()) // Already encoded when saved to Redis
+                .fullName(request.getFullName())
+                .phoneNumber(request.getPhoneNumber())
+                .role(User.Role.USER)
+                .authProvider(User.AuthProvider.LOCAL)
+                .isVerified(true) // Automatically verified
+                .build();
+
         userRepository.save(user);
 
         // Delete token after successful verification
-        tokenRepository.delete(verificationToken);
+        redisTemplate.delete(redisKey);
     }
 }

@@ -14,6 +14,9 @@ import com.kbase.entity.ProjectMember;
 import com.kbase.dto.response.ProjectOverviewResponse;
 import com.kbase.dto.response.DocumentResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,7 +42,7 @@ public class ProjectService {
     /**
      * Helper method to get the current authenticated user.
      */
-    private User getCurrentAuthenticatedUser() {
+    public User getCurrentAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             throw new IllegalArgumentException("User is not authenticated");
@@ -52,7 +55,7 @@ public class ProjectService {
     /**
      * Business Flow: Create a new project for the current authenticated user.
      * The current user automatically becomes the owner of the project.
-     * Role Permissions: Authenticated User (Any role).
+     * Role Permissions: System Role ADMIN or OWNER.
      *
      * @param request Project details containing name and description.
      * @return ProjectResponse with project data.
@@ -60,6 +63,10 @@ public class ProjectService {
     @Transactional
     public ProjectResponse createProject(ProjectRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
+
+        if (currentUser.getRole() == User.Role.USER) {
+            throw new org.springframework.security.access.AccessDeniedException("System Role USER is not allowed to create projects.");
+        }
 
         Project project = Project.builder()
                 .name(request.getName())
@@ -95,12 +102,15 @@ public class ProjectService {
      * @return The updated ProjectResponse.
      */
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "project_overview", key = "#projectId")
+    })
     public ProjectResponse updateProject(UUID projectId, ProjectUpdateRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
+        if (currentUser.getRole() != User.Role.ADMIN && !project.getOwner().getId().equals(currentUser.getId())) {
             throw new IllegalArgumentException("You don't have permission to update this project");
         }
 
@@ -119,12 +129,15 @@ public class ProjectService {
      * @param projectId ID of the project to delete.
      */
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "project_overview", key = "#projectId")
+    })
     public void deleteProject(UUID projectId) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
+        if (currentUser.getRole() != User.Role.ADMIN && !project.getOwner().getId().equals(currentUser.getId())) {
             throw new IllegalArgumentException("You don't have permission to delete this project");
         }
 
@@ -141,12 +154,13 @@ public class ProjectService {
      * @return ProjectOverviewResponse with stats.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "project_overview", key = "#projectId")
     public ProjectOverviewResponse getProjectOverview(UUID projectId) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
+        if (currentUser.getRole() != User.Role.ADMIN && !project.getOwner().getId().equals(currentUser.getId())) {
             boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(projectId, currentUser.getId());
             if (!isMember) {
                 throw new IllegalArgumentException("You don't have access to this project");

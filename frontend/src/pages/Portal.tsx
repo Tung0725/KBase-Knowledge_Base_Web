@@ -9,7 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import logoImg from '../assets/Logo_KBase.png';
 
 const Portal: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   return (
@@ -26,7 +26,25 @@ const Portal: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-space-sm">
-            <Link className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 shadow-sm px-6 py-2.5 rounded-full transition-all hidden sm:inline-flex items-center" to="/auth">Đăng nhập</Link>
+            {user ? (
+              <div className="flex items-center gap-2 mr-2">
+                <Link to="/profile" className="flex items-center gap-3 bg-surface-container-lowest px-2 py-1 rounded-full border border-outline-variant/30 hover:bg-surface-container transition-colors" title={user.email}>
+                  <span className="text-sm font-medium text-on-surface-variant hidden md:block pl-2">{user.email}</span>
+                  <div className="w-7 h-7 rounded-full bg-primary-container text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+                    {user.email.charAt(0).toUpperCase()}
+                  </div>
+                </Link>
+                <button
+                  onClick={logout}
+                  className="flex items-center justify-center w-9 h-9 rounded-full text-error bg-error-container/10 hover:bg-error-container/30 border border-error/20 transition-colors shrink-0"
+                  title="Đăng xuất"
+                >
+                  <span className="material-symbols-outlined text-[18px]">logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary/90 shadow-sm px-6 py-2.5 rounded-full transition-all hidden sm:inline-flex items-center mr-2" to="/auth">Đăng nhập</Link>
+            )}
             <button
               onClick={toggleTheme}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors text-on-surface-variant"

@@ -24,8 +24,7 @@ public class User extends BaseEntity {
     @Column(nullable = true)
     private String phoneNumber;
 
-    @Column(nullable = true)
-    private String avatarUrl;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(255) default 'USER'")
@@ -35,11 +34,21 @@ public class User extends BaseEntity {
     @Column(nullable = false, columnDefinition = "varchar(255) default 'LOCAL'")
     private AuthProvider authProvider;
 
+    @Builder.Default
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isVerified = false;
 
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isLocked = false;
+
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isDeleted = false;
+
     public enum Role {
         ADMIN,
+        OWNER,
         USER
     }
 

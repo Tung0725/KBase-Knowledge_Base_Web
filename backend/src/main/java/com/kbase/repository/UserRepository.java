@@ -16,7 +16,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
 
-    @Modifying
-    @Query("DELETE FROM User u WHERE u.isVerified = false AND u.createdAt < :time")
-    void deleteUnverifiedUsersOlderThan(@Param("time") LocalDateTime time);
+
+    @Query("SELECT u FROM User u WHERE u.isDeleted = false " +
+           "AND (:role IS NULL OR u.role = :role) " +
+           "AND (:isLocked IS NULL OR u.isLocked = :isLocked) " +
+           "AND (:keyword = '' OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    org.springframework.data.domain.Page<User> searchUsers(@Param("keyword") String keyword, @Param("role") User.Role role, @Param("isLocked") Boolean isLocked, org.springframework.data.domain.Pageable pageable);
 }

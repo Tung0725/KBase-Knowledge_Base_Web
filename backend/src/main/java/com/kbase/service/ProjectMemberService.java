@@ -45,6 +45,12 @@ public class ProjectMemberService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
+    private void checkManagePermission(Project project, User user, String action) {
+        if (!project.getOwner().getId().equals(user.getId()) && user.getRole() != User.Role.ADMIN) {
+            throw new IllegalArgumentException("Only the project owner or admin can " + action);
+        }
+    }
+
     /**
      * Get all members of a project, including the Owner.
      */
@@ -88,9 +94,7 @@ public class ProjectMemberService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
                 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("Only the project owner can add members");
-        }
+        checkManagePermission(project, currentUser, "add members");
         
         User targetUser = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User with this email is not registered in KBase"));
@@ -131,9 +135,7 @@ public class ProjectMemberService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
                 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("Only the project owner can remove members");
-        }
+        checkManagePermission(project, currentUser, "remove members");
         
         ProjectMember member = projectMemberRepository.findByProjectIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found in this project"));
@@ -152,9 +154,7 @@ public class ProjectMemberService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
                 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("Only the project owner can regenerate invite code");
-        }
+        checkManagePermission(project, currentUser, "regenerate invite code");
         
         project.setInviteCode(UUID.randomUUID().toString());
         project.setIsInviteLinkActive(true);
@@ -172,9 +172,7 @@ public class ProjectMemberService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
                 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("Only the project owner can toggle invite link");
-        }
+        checkManagePermission(project, currentUser, "toggle invite link");
         
         if (project.getInviteCode() == null && isActive) {
             project.setInviteCode(UUID.randomUUID().toString());
@@ -235,9 +233,7 @@ public class ProjectMemberService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
                 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("Only the project owner can update member roles");
-        }
+        checkManagePermission(project, currentUser, "update member roles");
         
         ProjectMember member = projectMemberRepository.findByProjectIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found in this project"));
@@ -265,9 +261,7 @@ public class ProjectMemberService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
                 
-        if (!project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("Only the project owner can bulk update member roles");
-        }
+        checkManagePermission(project, currentUser, "bulk update member roles");
         
         List<ProjectMember> members = projectMemberRepository.findByProjectId(projectId);
         for (ProjectMember member : members) {

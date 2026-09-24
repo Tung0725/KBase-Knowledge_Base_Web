@@ -16,4 +16,7 @@ public class AuthResponse {
     private String email;
     private String role;
     private UUID userId;
+    private String fullName;
+    private String phoneNumber;
+    private boolean hasPassword;
 }

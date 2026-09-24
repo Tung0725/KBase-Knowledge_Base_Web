@@ -15,6 +15,9 @@ const ProjectMembers: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   
+  const isAdmin = user?.role === 'ADMIN';
+  const canManage = isOwner || isAdmin;
+  
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addEmail, setAddEmail] = useState('');
   const [addRole, setAddRole] = useState<ProjectRole>('VIEWER');
@@ -150,7 +153,7 @@ const ProjectMembers: React.FC = () => {
           <span className="material-symbols-outlined text-primary">group</span>
           Thành viên
         </h3>
-        {isOwner && (
+        {canManage && (
           <div className="flex gap-2">
             <button 
               onClick={() => handleBulkUpdateRole('VIEWER')}
@@ -179,7 +182,7 @@ const ProjectMembers: React.FC = () => {
         )}
       </div>
 
-      {isOwner && (
+      {canManage && (
         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
@@ -266,7 +269,7 @@ const ProjectMembers: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-span-3">
-                  {isOwner && member.role !== 'OWNER' ? (
+                  {canManage && member.role !== 'OWNER' ? (
                     <select
                       value={member.role}
                       onChange={(e) => handleUpdateRole(member.userId, e.target.value as ProjectRole)}
@@ -288,7 +291,7 @@ const ProjectMembers: React.FC = () => {
                   )}
                 </div>
                 <div className="col-span-2 text-right flex justify-end">
-                  {isOwner && member.role !== 'OWNER' && (
+                  {canManage && member.role !== 'OWNER' && (
                     <button 
                       onClick={() => handleRemoveMember(member.userId)}
                       className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg transition-colors"

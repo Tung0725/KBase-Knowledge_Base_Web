@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
     List<Document> findByProjectId(UUID projectId);
     List<Document> findByProjectIdAndStatus(UUID projectId, Document.DocumentStatus status);
+    void deleteAllByProjectId(UUID projectId);
+    long countByUploadedBy_Id(UUID userId);
 }
