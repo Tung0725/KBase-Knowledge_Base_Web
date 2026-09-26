@@ -5,10 +5,12 @@ server:
 spring:
   application:
     name: kbase-backend
+  config:
+    import: optional:file:./application-secret.yml
   datasource:
     url: jdbc:postgresql://localhost:5433/kbase_db
     username: kbase_user
-    password: kbase_password
+    password: ${DB_PASSWORD:kbase_password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -22,7 +24,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: ayemi597@gmail.com
-    password: "xwcywposeqrcdwdk"
+    password: ${MAIL_PASSWORD:dummy_mail_password_123}
     properties:
       mail:
         smtp:
@@ -36,8 +38,11 @@ spring:
 
 app:
   jwt:
-    secret: 9a4f2c8d3b7a1e6f45c8a0b3f267d8b1d4e6f3c8a9d2b5f8e3a9c8b5f6v8a3d9 # 256-bit secret key
+    secret: ${JWT_SECRET:day_la_jwt_secret_gia_danh_cho_moi_truong_dev_dia_phuong}
     expiration-ms: 86400000 # 24 hours
+  ai:
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:sk-dummy-key-for-local-development}
 
 minio:
   url: http://localhost:9000

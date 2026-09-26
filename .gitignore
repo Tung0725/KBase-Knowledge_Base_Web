@@ -65,3 +65,4 @@ pnpm-debug.log*
 *.swo
 .env
 *.env.*
+application-secret.yml
