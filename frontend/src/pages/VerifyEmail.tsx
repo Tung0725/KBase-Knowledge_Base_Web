@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import logoImg from '../assets/Logo_KBase.png';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const navigate = useNavigate();
-
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Đang xác thực email của bạn...');
 

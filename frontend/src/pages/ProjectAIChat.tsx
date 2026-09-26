@@ -139,22 +139,10 @@ const ProjectAIChat: React.FC = () => {
   };
 
   const filteredSources = sources.filter(src => sourceFilter === 'all' || src.tag === sourceFilter);
-  const isAllFilteredSelected = filteredSources.length > 0 && filteredSources.every(src => selectedSourceIds.includes(src.id));
-
   const toggleSourceSelection = (id: string) => {
     setSelectedSourceIds(prev => 
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
-  };
-
-  const toggleAllSources = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      const newIds = new Set([...selectedSourceIds, ...filteredSources.map(s => s.id)]);
-      setSelectedSourceIds(Array.from(newIds));
-    } else {
-      const filteredIds = filteredSources.map(s => s.id);
-      setSelectedSourceIds(selectedSourceIds.filter(id => !filteredIds.includes(id)));
-    }
   };
 
   const getIconForTag = (tag: string) => {
