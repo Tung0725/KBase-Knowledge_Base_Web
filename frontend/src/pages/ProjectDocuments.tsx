@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { documentService } from '../services/documentService';
+import { projectService } from '../services/projectService';
 import type { Document } from '../types/project';
 import { toast } from 'react-hot-toast';
 
@@ -18,6 +19,17 @@ const ProjectDocuments: React.FC = () => {
   
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [memberMap, setMemberMap] = useState<Record<string, string>>({});
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 30;
+  
+  // Filter & Sort State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [filterType, setFilterType] = useState('all');
+  const [filterSize, setFilterSize] = useState('all');
   
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -28,6 +40,8 @@ const ProjectDocuments: React.FC = () => {
   const [previewLoading, setPreviewLoading] = useState(false);
   
   // Action State
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [viewDocDetails, setViewDocDetails] = useState<Document | null>(null);
   const [editDoc, setEditDoc] = useState<Document | null>(null);
   const [editFileName, setEditFileName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -48,8 +62,16 @@ const ProjectDocuments: React.FC = () => {
     if (!projectId) return;
     try {
       setLoading(true);
-      const data = await documentService.getDocuments(projectId);
+      const [data, members] = await Promise.all([
+        documentService.getDocuments(projectId),
+        projectService.getProjectMembers(projectId)
+      ]);
       setDocuments(data);
+      const mMap: Record<string, string> = {};
+      members.forEach(m => {
+        mMap[m.userId] = m.email.split('@')[0];
+      });
+      setMemberMap(mMap);
     } catch (error: any) {
       toast.error('Lỗi khi tải danh sách tài liệu');
     } finally {
@@ -57,18 +79,31 @@ const ProjectDocuments: React.FC = () => {
     }
   };
 
+  const dragCounter = useRef(0);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    dragCounter.current = 0;
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -246,36 +281,163 @@ const ProjectDocuments: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const filteredAndSortedDocs = useMemo(() => {
+    let result = [...documents];
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(d => {
+        const uploaderName = memberMap[d.uploadedByUserId] || 'Thành viên';
+        return d.fileName.toLowerCase().includes(lower) || 
+               (d.description && d.description.toLowerCase().includes(lower)) ||
+               uploaderName.toLowerCase().includes(lower);
+      });
+    }
+    if (filterType !== 'all') {
+      result = result.filter(d => d.tag === filterType);
+    }
+    if (filterSize !== 'all') {
+      const MB = 1024 * 1024;
+      if (filterSize === 'small') result = result.filter(d => d.fileSizeBytes < 5 * MB);
+      else if (filterSize === 'medium') result = result.filter(d => d.fileSizeBytes >= 5 * MB && d.fileSizeBytes <= 50 * MB);
+      else if (filterSize === 'large') result = result.filter(d => d.fileSizeBytes > 50 * MB);
+    }
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest': return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'nameAsc': return a.fileName.localeCompare(b.fileName);
+        case 'nameDesc': return b.fileName.localeCompare(a.fileName);
+        case 'sizeDesc': return b.fileSizeBytes - a.fileSizeBytes;
+        case 'sizeAsc': return a.fileSizeBytes - b.fileSizeBytes;
+        default: return 0;
+      }
+    });
+    return result;
+  }, [documents, searchTerm, filterType, filterSize, sortBy, memberMap]);
+
+  const totalPages = Math.ceil(filteredAndSortedDocs.length / itemsPerPage);
+  const paginatedDocs = filteredAndSortedDocs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-full flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">description</span>
-          Tài liệu
-        </h3>
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-container text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      className="flex flex-col gap-3 pb-8 relative min-h-[500px]"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Full screen Drag & Drop Overlay */}
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-4 z-[100] rounded-[32px] border-4 border-primary border-dashed bg-primary/10 backdrop-blur-sm flex items-center justify-center pointer-events-none shadow-2xl"
+          >
+            <div className="bg-surface rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4">
+              <span className="material-symbols-outlined text-6xl text-primary animate-bounce">cloud_upload</span>
+              <h3 className="text-2xl font-bold text-primary">Thả file vào đây để tải lên</h3>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="material-symbols-outlined text-primary text-2xl">description</span>
+        <h3 className="text-xl font-bold">Tài liệu</h3>
+      </div>
+
+      <div className="flex flex-col md:flex-row items-start gap-4 mb-4 justify-between">
+        {/* Toolbar */}
+        <div className="flex-1 w-full max-w-3xl flex flex-col gap-3">
+          {/* Search */}
+          <div className="relative w-full">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+            <input 
+              type="text" 
+              placeholder="Tìm kiếm theo tên file, mô tả hoặc người tải lên..." 
+              value={searchTerm}
+              onChange={e => {setSearchTerm(e.target.value); setCurrentPage(1);}}
+              className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/30 rounded-xl outline-none focus:border-primary transition-colors text-sm shadow-sm"
+            />
+            {searchTerm && (
+              <button onClick={() => {setSearchTerm(''); setCurrentPage(1);}} className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5">
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            )}
+          </div>
+          
+          {/* Filters & Sort */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar">
+             <div className="flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-2 py-1.5 shadow-sm shrink-0">
+               <span className="material-symbols-outlined text-[16px] text-on-surface-variant">sort</span>
+               <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="text-xs font-medium bg-transparent outline-none cursor-pointer">
+                 <option value="newest">Mới nhất</option>
+                 <option value="oldest">Cũ nhất</option>
+                 <option value="sizeDesc">Dung lượng giảm dần</option>
+                 <option value="sizeAsc">Dung lượng tăng dần</option>
+                 <option value="nameAsc">Tên (A-Z)</option>
+                 <option value="nameDesc">Tên (Z-A)</option>
+               </select>
+             </div>
+             <div className="flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-2 py-1.5 shadow-sm shrink-0">
+               <span className="material-symbols-outlined text-[16px] text-on-surface-variant">filter_list</span>
+               <select value={filterType} onChange={e => {setFilterType(e.target.value); setCurrentPage(1);}} className="text-xs font-medium bg-transparent outline-none cursor-pointer">
+                  <option value="all">Mọi định dạng</option>
+                  <option value="[Tài liệu]">Tài liệu (Word, PDF...)</option>
+                  <option value="[Ảnh]">Hình ảnh</option>
+                  <option value="[Video]">Video</option>
+                  <option value="[Media]">Media khác</option>
+                  <option value="[Khác]">Khác</option>
+               </select>
+             </div>
+             <div className="flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-2 py-1.5 shadow-sm shrink-0">
+               <span className="material-symbols-outlined text-[16px] text-on-surface-variant">sd_storage</span>
+               <select value={filterSize} onChange={e => {setFilterSize(e.target.value); setCurrentPage(1);}} className="text-xs font-medium bg-transparent outline-none cursor-pointer">
+                  <option value="all">Mọi kích thước</option>
+                  <option value="small">Nhỏ (&lt; 5MB)</option>
+                  <option value="medium">Vừa (5MB - 50MB)</option>
+                  <option value="large">Lớn (&gt; 50MB)</option>
+               </select>
+             </div>
+          </div>
+        </div>
+
+        <div 
+          className="w-full lg:w-[480px] bg-surface-container-lowest border-2 rounded-xl shadow-sm border-dashed flex items-center justify-between px-4 py-2 border-outline-variant/50 shrink-0 gap-4"
         >
-          <span className="material-symbols-outlined text-[18px]">upload</span>
-          Tải lên
-        </button>
-        <input 
-          type="file" 
-          multiple 
-          ref={fileInputRef} 
-          onChange={handleFileInput} 
-          className="hidden" 
-        />
+          <div className="flex items-center gap-3 truncate">
+            <div className="w-8 h-8 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+            </div>
+            <div className="truncate flex flex-col">
+              <h4 className="text-sm font-bold truncate text-on-surface">Kéo thả file vào đây</h4>
+              <p className="text-[11px] text-on-surface-variant truncate">Tối đa 1GB/file</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="shrink-0 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1 hover:bg-primary/90 shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[16px]">folder_open</span>
+            Chọn file
+          </button>
+          <input 
+            type="file" 
+            multiple 
+            ref={fileInputRef} 
+            onChange={handleFileInput} 
+            className="hidden" 
+          />
+        </div>
       </div>
 
       {/* Uploaded Documents List */}
-      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-sm overflow-hidden flex-1 flex flex-col">
+      <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-sm flex flex-col">
         <div className="p-4 border-b border-outline-variant/30 bg-surface-container/30 shrink-0">
           <div className="grid grid-cols-12 gap-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
             <div className="col-span-6">Tên tài liệu</div>
-            <div className="col-span-2">Dung lượng</div>
-            <div className="col-span-2">Phân loại</div>
+            <div className="col-span-4">Mô tả</div>
             <div className="col-span-2 text-right">Thao tác</div>
           </div>
         </div>
@@ -289,65 +451,118 @@ const ProjectDocuments: React.FC = () => {
         {!loading && documents.length === 0 && (
           <div className="p-4 flex flex-col items-center justify-center text-sm text-on-surface-variant py-12">
             <span className="material-symbols-outlined text-4xl mb-2 text-outline-variant">find_in_page</span>
-            Chưa có tài liệu nào
+            Dự án chưa có tài liệu nào
           </div>
         )}
         
-        {!loading && documents.length > 0 && (
-          <div className="divide-y divide-outline-variant/20 overflow-y-auto">
-            {documents.slice(0, 20).map(doc => (
+        {!loading && documents.length > 0 && filteredAndSortedDocs.length === 0 && (
+          <div className="p-4 flex flex-col items-center justify-center text-sm text-on-surface-variant py-12">
+            <span className="material-symbols-outlined text-4xl mb-2 text-outline-variant">search_off</span>
+            Không tìm thấy tài liệu phù hợp với bộ lọc
+          </div>
+        )}
+        
+        {!loading && filteredAndSortedDocs.length > 0 && (
+          <div className="divide-y divide-outline-variant/20">
+            {paginatedDocs.map(doc => (
               <div 
                 key={doc.id} 
-                className="p-4 grid grid-cols-12 items-center gap-4 hover:bg-surface-container/10 transition-colors cursor-pointer"
-                onClick={() => handlePreview(doc)}
+                className="p-4 grid grid-cols-12 items-center gap-4 hover:bg-surface-container/10 transition-colors group"
               >
                 <div className="col-span-6 flex items-center gap-3 truncate">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">
-                      {doc.tag === '[Tài liệu]' ? 'description' : doc.tag === '[Media]' ? 'perm_media' : 'draft'}
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">
+                      {doc.tag === '[Ảnh]' ? 'image' : doc.tag === '[Video]' ? 'movie' : doc.tag === '[Tài liệu]' ? 'description' : 'draft'}
                     </span>
                   </div>
-                  <div className="truncate">
-                    <div className="text-sm font-medium text-on-surface truncate" title={doc.fileName}>{doc.fileName}</div>
-                    <div className="text-xs text-on-surface-variant">Tải lên: {new Date(doc.createdAt).toLocaleDateString()}</div>
+                  <div className="flex-1 min-w-0">
+                    <p 
+                      className="text-sm font-semibold text-on-surface truncate cursor-pointer hover:text-primary transition-colors" 
+                      onClick={() => handlePreview(doc)}
+                      title={doc.fileName}
+                    >
+                      {doc.fileName}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-on-surface-variant mt-1">
+                      <span className="font-medium text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded">{doc.tag}</span>
+                      <span>•</span>
+                      <span>{formatBytes(doc.fileSizeBytes)}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1" title="Thời gian tải lên">
+                        <span className="material-symbols-outlined text-[14px]">schedule</span>
+                        {new Date(doc.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - {new Date(doc.createdAt).toLocaleDateString('vi-VN')}
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 truncate" title="Người tải lên">
+                        <span className="material-symbols-outlined text-[14px]">person</span>
+                        <span className="truncate">{memberMap[doc.uploadedByUserId] || 'Thành viên'}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="col-span-2 text-sm text-on-surface-variant">
-                  {formatBytes(doc.fileSizeBytes)}
+                <div className="col-span-4 text-sm text-on-surface-variant truncate pr-2">
+                  {doc.description ? (
+                    <span title={doc.description}>{doc.description}</span>
+                  ) : (
+                    <span className="italic opacity-50">Không có mô tả</span>
+                  )}
                 </div>
-                <div className="col-span-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container text-on-surface-variant border border-outline-variant/30">
-                    {doc.tag}
-                  </span>
-                </div>
-                <div className="col-span-2 text-right flex justify-end gap-1">
+                <div className="col-span-2 flex items-center justify-end gap-1">
                   <button 
-                    onClick={(e) => { e.stopPropagation(); openEditModal(doc); }}
-                    className="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                    title="Sửa thông tin"
+                    onClick={() => setViewDocDetails(doc)} 
+                    className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    title="Xem chi tiết"
                   >
-                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                    <span className="material-symbols-outlined text-[18px]">visibility</span>
                   </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleDownload(doc.id, doc.fileName); }}
-                    className="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                    title="Tải xuống"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">download</span>
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setDeleteDoc(doc); }}
-                    className="p-2 text-on-surface-variant hover:text-error hover:bg-error/10 rounded-lg transition-colors"
-                    title="Xóa"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                  </button>
+                  <div className="relative">
+                    <button 
+                      onClick={() => setActiveDropdown(activeDropdown === doc.id ? null : doc.id)}
+                      className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                    </button>
+                    {activeDropdown === doc.id && (
+                      <div className="absolute right-0 mt-1 w-36 bg-surface-container-lowest border border-outline-variant/30 rounded-lg shadow-lg overflow-hidden z-10 py-1">
+                        <button onClick={() => { setActiveDropdown(null); handleDownload(doc.id, doc.fileName); }} className="w-full text-left px-4 py-2 text-sm hover:bg-surface-container flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px]">download</span> Tải xuống
+                        </button>
+                        <button onClick={() => { setActiveDropdown(null); openEditModal(doc); }} className="w-full text-left px-4 py-2 text-sm hover:bg-surface-container flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px]">edit</span> Chỉnh sửa
+                        </button>
+                        <button onClick={() => { setActiveDropdown(null); setDeleteDoc(doc); }} className="w-full text-left px-4 py-2 text-sm hover:bg-error/10 text-error flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px]">delete</span> Xóa
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
-            {documents.length > 20 && (
-              <div className="p-3 text-center text-xs text-on-surface-variant bg-surface-container-lowest">
-                Đang hiển thị 20 tài liệu gần nhất.
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between p-4 border-t border-outline-variant/30 bg-surface-container/10">
+                <p className="text-xs text-on-surface-variant">
+                  Hiển thị {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredAndSortedDocs.length)} trong số {filteredAndSortedDocs.length} tài liệu
+                </p>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-1 rounded-lg hover:bg-surface-container disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                  </button>
+                  <span className="text-sm font-semibold">{currentPage} / {totalPages}</span>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-1 rounded-lg hover:bg-surface-container disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -406,30 +621,7 @@ const ProjectDocuments: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Drag & Drop Zone (Smaller version) */}
-      <div 
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`shrink-0 bg-surface-container-lowest border-2 rounded-xl shadow-sm border-dashed flex items-center justify-between px-6 py-4 transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-outline-variant/50'}`}
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-2xl">cloud_upload</span>
-          </div>
-          <div>
-            <h4 className="text-base font-bold">Kéo thả file vào đây để tải lên</h4>
-            <p className="text-xs text-on-surface-variant">Hỗ trợ mọi định dạng. Tối đa 1GB/file.</p>
-          </div>
-        </div>
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          className="shrink-0 px-4 py-2 bg-surface-container hover:bg-outline-variant/30 text-on-surface rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-        >
-          <span className="material-symbols-outlined text-[18px]">folder_open</span>
-          Chọn file
-        </button>
-      </div>
+      {/* Drop zone moved to top */}
 
       {/* Preview Modal */}
       <AnimatePresence>
@@ -515,6 +707,78 @@ const ProjectDocuments: React.FC = () => {
                     )}
                   </>
                 )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* View Details Modal */}
+      <AnimatePresence>
+        {viewDocDetails && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container-lowest">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">info</span>
+                  Thông tin chi tiết
+                </h3>
+                <button onClick={() => setViewDocDetails(null)} className="text-on-surface-variant hover:bg-outline-variant/20 p-2 rounded-full">
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                  <div>
+                    <p className="text-on-surface-variant mb-1">Tên tài liệu</p>
+                    <p className="font-semibold break-words">{viewDocDetails.fileName}</p>
+                  </div>
+                  <div>
+                    <p className="text-on-surface-variant mb-1">Người tải lên</p>
+                    <p className="font-semibold">{memberMap[viewDocDetails.uploadedByUserId] || 'Không rõ'}</p>
+                  </div>
+                  <div>
+                    <p className="text-on-surface-variant mb-1">Dung lượng</p>
+                    <p className="font-semibold">{formatBytes(viewDocDetails.fileSizeBytes)}</p>
+                  </div>
+                  <div>
+                    <p className="text-on-surface-variant mb-1">Phân loại</p>
+                    <p className="font-semibold">{viewDocDetails.tag}</p>
+                  </div>
+                  <div>
+                    <p className="text-on-surface-variant mb-1">Ngày tải lên</p>
+                    <p className="font-semibold">
+                      {new Date(viewDocDetails.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - {new Date(viewDocDetails.createdAt).toLocaleDateString('vi-VN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-on-surface-variant mb-1">Định dạng file</p>
+                    <p className="font-semibold">{viewDocDetails.fileType}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-on-surface-variant mb-1">Mô tả</p>
+                    <div className="bg-surface-container-lowest border border-outline-variant/30 p-3 rounded-xl min-h-[80px]">
+                      {viewDocDetails.description ? (
+                        <p className="whitespace-pre-wrap">{viewDocDetails.description}</p>
+                      ) : (
+                        <p className="text-on-surface-variant italic">Không có mô tả</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 border-t border-outline-variant/30 flex justify-end gap-3 bg-surface-container-lowest">
+                <button onClick={() => setViewDocDetails(null)} className="px-5 py-2 rounded-xl text-sm font-bold bg-surface-container hover:bg-outline-variant/20 transition-colors">Đóng</button>
+                <button onClick={() => { setViewDocDetails(null); handlePreview(viewDocDetails); }} className="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-white flex items-center gap-2 hover:bg-primary/90 transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                  Mở tài liệu
+                </button>
               </div>
             </motion.div>
           </motion.div>

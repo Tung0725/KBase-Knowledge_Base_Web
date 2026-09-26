@@ -49,6 +49,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
 
   const navItems = [
     { id: 'overview', label: 'Tổng quan', icon: 'dashboard', path: `${basePath}` },
+    { id: 'chat', label: 'Chat AI', icon: 'forum', path: `${basePath}/chat` },
     { id: 'documents', label: 'Tài liệu', icon: 'description', path: `${basePath}/documents` },
     { id: 'members', label: 'Thành viên', icon: 'group', path: `${basePath}/members` },
     { id: 'settings', label: 'Cài đặt', icon: 'settings', path: `${basePath}/settings` },
@@ -161,16 +162,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
               <span className="text-on-surface font-semibold max-w-[200px] truncate">{projectName}</span>
             </div>
 
-            <div className="hidden md:block relative w-64 ml-8">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline">
-                <span className="material-symbols-outlined text-[18px]">search</span>
-              </span>
-              <input 
-                className="w-full pl-9 pr-4 py-1.5 text-sm bg-surface-container-lowest border border-outline-variant/50 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-outline shadow-sm" 
-                placeholder="Tìm kiếm nội dung..." 
-                type="text" 
-              />
-            </div>
+
           </div>
 
           {/* User Actions */}

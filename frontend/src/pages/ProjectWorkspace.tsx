@@ -3,6 +3,7 @@ import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import ProjectLayout from '../components/ProjectLayout';
 import ProjectMembers from './ProjectMembers';
 import ProjectDocuments from './ProjectDocuments';
+import ProjectAIChat from './ProjectAIChat';
 import { motion } from 'framer-motion';
 import { projectService } from '../services/projectService';
 import type { ProjectOverviewResponse } from '../types/project';
@@ -45,6 +46,7 @@ const ProjectWorkspace: React.FC = () => {
     >
       <Routes>
         <Route path="/" element={<ProjectOverview />} />
+        <Route path="/chat" element={<ProjectAIChat />} />
         <Route path="/documents" element={<ProjectDocuments />} />
         <Route path="/members" element={<ProjectMembers />} />
         <Route path="/settings" element={<ProjectSettings />} />

@@ -39,6 +39,7 @@ public class DocumentService {
     private final ProjectMemberRepository projectMemberRepository;
     private final UserRepository userRepository;
     private final MinioClient minioClient;
+    private final DocumentAiService documentAiService;
 
     @Value("${minio.bucket-name}")
     private String bucketName;
@@ -164,6 +165,20 @@ public class DocumentService {
         document.setStatus(Document.DocumentStatus.UPLOADED);
         document.setTag(tag);
         document = documentRepository.save(document);
+
+        // Nạp vào AI Vector DB ngầm (Async) để không block API
+        final Document finalDoc = document;
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                documentAiService.ingestDocument(
+                    finalDoc.getObjectKey(), 
+                    finalDoc.getId().toString(), 
+                    finalDoc.getProject().getId().toString()
+                );
+            } catch (Exception e) {
+                System.err.println("Async AI Ingestion failed: " + e.getMessage());
+            }
+        });
 
         return mapToResponse(document);
     }
