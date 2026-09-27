@@ -33,9 +33,14 @@ public class AiConfig {
         return OpenAiChatModel.builder()
                 .baseUrl("https://api.deepseek.com")
                 .apiKey(deepseekApiKey)
-                .modelName("deepseek-chat")
-                .timeout(Duration.ofSeconds(60))
-                .temperature(0.3)
+                // Sửa thành ID mô hình hiện tại đang hoạt động, ví dụ sử dụng Flash (khuyến nghị cho tác vụ thông thường)
+                .modelName("deepseek-flash")
+                // Nếu bạn thực sự cần khả năng suy luận mạnh mẽ hơn, có thể chọn deepseek-v4-pro
+                // .modelName("deepseek-v4-pro")
+                .timeout(Duration.ofSeconds(120))
+                // Lưu ý: Trong chế độ suy nghĩ, temperature thường không có hiệu lực, khuyến nghị
+                // xóa hoặc đặt ở chế độ không suy nghĩ
+                // .temperature(0.3)
                 .build();
     }
 

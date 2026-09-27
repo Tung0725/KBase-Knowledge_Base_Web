@@ -22,6 +22,7 @@ const ProjectMembers: React.FC = () => {
   const [addEmail, setAddEmail] = useState('');
   const [addRole, setAddRole] = useState<ProjectRole>('VIEWER');
   const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   
   // Fake invite state since we don't have getProjectById yet, we will just use a fake invite code or fetch it differently
   // Actually, we can fetch project details or we can manage invite links in a separate tab or here.
@@ -56,7 +57,7 @@ const ProjectMembers: React.FC = () => {
         setIsOwner(true);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Lỗi khi tải thành viên');
+      toast.error(error.response?.data?.message || 'Lỗi khi tải thành viên', { id: 'load-members-err' });
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ const ProjectMembers: React.FC = () => {
       setAddEmail('');
       loadMembers();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Lỗi khi thêm thành viên');
+      setAddError(error.response?.data?.message || 'Lỗi khi thêm thành viên');
     } finally {
       setIsAdding(false);
     }
@@ -86,10 +87,10 @@ const ProjectMembers: React.FC = () => {
     
     try {
       await projectService.removeMember(projectId, userId);
-      toast.success('Xóa thành viên thành công');
+      toast.success('Xóa thành viên thành công', { id: 'remove-member' });
       loadMembers();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Lỗi khi xóa thành viên');
+      toast.error(error.response?.data?.message || 'Lỗi khi xóa thành viên', { id: 'remove-member-err' });
     }
   };
 
@@ -99,12 +100,12 @@ const ProjectMembers: React.FC = () => {
       const newState = !isLinkActive;
       await projectService.toggleInviteLink(projectId, newState);
       setIsLinkActive(newState);
-      toast.success(newState ? 'Đã bật link chia sẻ' : 'Đã tắt link chia sẻ');
+      toast.success(newState ? 'Đã bật link chia sẻ' : 'Đã tắt link chia sẻ', { id: 'toggle-link' });
       if (newState && !inviteCode) {
         handleRegenerateLink();
       }
     } catch (error: any) {
-      toast.error('Lỗi khi bật/tắt link');
+      toast.error('Lỗi khi bật/tắt link', { id: 'toggle-link-err' });
     }
   };
 
@@ -114,9 +115,9 @@ const ProjectMembers: React.FC = () => {
       const newCode = await projectService.regenerateInviteCode(projectId);
       setInviteCode(newCode);
       setIsLinkActive(true);
-      toast.success('Đã tạo link mới');
+      toast.success('Đã tạo link mới', { id: 'regen-link' });
     } catch (error: any) {
-      toast.error('Lỗi khi tạo link');
+      toast.error('Lỗi khi tạo link', { id: 'regen-link-err' });
     }
   };
 
@@ -124,10 +125,10 @@ const ProjectMembers: React.FC = () => {
     if (!projectId) return;
     try {
       await projectService.updateMemberRole(projectId, userId, newRole);
-      toast.success('Đã cập nhật quyền thành viên');
+      toast.success('Đã cập nhật quyền thành viên', { id: 'update-role' });
       loadMembers();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Lỗi khi cập nhật quyền');
+      toast.error(error.response?.data?.message || 'Lỗi khi cập nhật quyền', { id: 'update-role-err' });
     }
   };
 
@@ -137,10 +138,10 @@ const ProjectMembers: React.FC = () => {
     
     try {
       await projectService.updateAllMembersRole(projectId, newRole);
-      toast.success('Đã cập nhật quyền cho tất cả thành viên');
+      toast.success('Đã cập nhật quyền cho tất cả thành viên', { id: 'bulk-update' });
       loadMembers();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Lỗi khi cập nhật quyền hàng loạt');
+      toast.error(error.response?.data?.message || 'Lỗi khi cập nhật quyền hàng loạt', { id: 'bulk-update-err' });
     }
   };
   
@@ -213,7 +214,7 @@ const ProjectMembers: React.FC = () => {
                 <button 
                   onClick={() => {
                     navigator.clipboard.writeText(inviteUrl);
-                    toast.success('Đã copy link');
+                    toast.success('Đã copy link', { id: 'copy-link' });
                   }}
                   className="px-4 py-2 bg-surface-container hover:bg-outline-variant/30 text-on-surface rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"
                 >
@@ -319,7 +320,10 @@ const ProjectMembers: React.FC = () => {
               <div className="p-6 border-b border-outline-variant/30 flex items-center justify-between">
                 <h2 className="text-xl font-bold">Mời thành viên</h2>
                 <button 
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    setAddError(null);
+                  }}
                   className="text-on-surface-variant hover:text-on-surface transition-colors"
                 >
                   <span className="material-symbols-outlined">close</span>
@@ -333,12 +337,21 @@ const ProjectMembers: React.FC = () => {
                     type="email"
                     required
                     value={addEmail}
-                    onChange={e => setAddEmail(e.target.value)}
+                    onChange={e => {
+                      setAddEmail(e.target.value);
+                      setAddError(null);
+                    }}
                     placeholder="vidu@gmail.com"
                     className="w-full px-4 py-3 rounded-xl bg-surface-container text-on-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                   />
                   <p className="text-xs text-on-surface-variant">Người dùng phải có tài khoản KBase từ trước.</p>
                 </div>
+
+                {addError && (
+                  <div className="p-3 bg-error-container/20 text-error rounded-xl text-sm font-medium border border-error/20">
+                    {addError}
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <label className="text-sm font-semibold text-on-surface">Quyền hạn (Vai trò)</label>
@@ -372,8 +385,8 @@ const ProjectMembers: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={isAdding}
-                    className="flex-1 py-3 px-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    disabled={isAdding || !addEmail.trim() || !!addError}
+                    className="flex-1 py-3 px-4 bg-primary hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isAdding ? (
                       <span className="material-symbols-outlined animate-spin">refresh</span>

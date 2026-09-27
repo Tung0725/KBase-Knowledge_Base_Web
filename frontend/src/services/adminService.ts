@@ -27,7 +27,6 @@ export interface AdminProject {
   membersCount: number;
   usedStorageBytes: number;
   storageQuotaBytes: number;
-  isPublic: boolean;
   createdAt: string;
 }
 
@@ -94,10 +93,9 @@ export const adminService = {
     await apiClient.put<any>(`/admin/users/${userId}/status`);
   },
   
-  getProjects: async (search?: string, isPublic?: boolean, page: number = 0, size: number = 30, sortBy: string = 'createdAt'): Promise<PageResponse<AdminProject>> => {
+  getProjects: async (search?: string, page: number = 0, size: number = 30, sortBy: string = 'createdAt'): Promise<PageResponse<AdminProject>> => {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
-    if (isPublic !== undefined) params.append('isPublic', isPublic.toString());
     params.append('page', page.toString());
     params.append('size', size.toString());
     params.append('sortBy', sortBy);
@@ -105,10 +103,7 @@ export const adminService = {
     return response.data.data;
   },
 
-  updateProjectStatus: async (projectId: string, isPublic: boolean): Promise<void> => {
-    const params = new URLSearchParams({ isPublic: isPublic.toString() });
-    await apiClient.put<any>(`/admin/projects/${projectId}/status?${params.toString()}`);
-  },
+
 
   updateProjectQuota: async (projectId: string, quotaBytes: number): Promise<void> => {
     const params = new URLSearchParams({ quotaBytes: quotaBytes.toString() });

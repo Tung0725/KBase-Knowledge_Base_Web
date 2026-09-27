@@ -43,8 +43,11 @@ const ProjectOverview: React.FC = () => {
   const [editFileName, setEditFileName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [isSavingDoc, setIsSavingDoc] = useState(false);
+  const [editDocError, setEditDocError] = useState<string | null>(null);
+  
   const [deleteDoc, setDeleteDoc] = useState<Document | null>(null);
   const [isDeletingDoc, setIsDeletingDoc] = useState(false);
+  const [deleteDocError, setDeleteDocError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -85,14 +88,13 @@ const ProjectOverview: React.FC = () => {
       setIsSaving(true);
       await projectService.updateProject(projectId, {
         name: editName,
-        description: editDesc,
-        isPublic: overview.isPublic
+        description: editDesc
       });
       setOverview({ ...overview, name: editName, description: editDesc });
       setIsEditing(false);
-      toast.success('Đã cập nhật thông tin dự án');
+      toast.success('Đã cập nhật thông tin dự án', { id: 'update-project-success' });
     } catch (error) {
-      toast.error('Không thể cập nhật thông tin dự án');
+      toast.error('Không thể cập nhật thông tin dự án', { id: 'update-project-err' });
     } finally {
       setIsSaving(false);
     }
@@ -109,7 +111,7 @@ const ProjectOverview: React.FC = () => {
       a.click();
       document.body.removeChild(a);
     } catch (error) {
-      toast.error('Lỗi khi tải xuống');
+      toast.error('Lỗi khi tải xuống', { id: 'download-err' });
     }
   };
 
@@ -121,12 +123,12 @@ const ProjectOverview: React.FC = () => {
         fileName: editFileName,
         description: editDescription
       });
-      toast.success('Cập nhật tài liệu thành công');
+      toast.success('Cập nhật tài liệu thành công', { id: 'update-doc-success' });
       setEditDoc(null);
       const data = await projectService.getProjectOverview(projectId);
       setOverview(data);
-    } catch (error) {
-      toast.error('Không thể cập nhật tài liệu');
+    } catch (error: any) {
+      setEditDocError(error.response?.data?.message || 'Không thể cập nhật tài liệu');
     } finally {
       setIsSavingDoc(false);
     }
@@ -137,12 +139,12 @@ const ProjectOverview: React.FC = () => {
     try {
       setIsDeletingDoc(true);
       await documentService.deleteDocument(projectId, deleteDoc.id);
-      toast.success('Đã xóa tài liệu');
+      toast.success('Đã xóa tài liệu', { id: 'delete-doc-success' });
       setDeleteDoc(null);
       const data = await projectService.getProjectOverview(projectId);
       setOverview(data);
-    } catch (error) {
-      toast.error('Không thể xóa tài liệu');
+    } catch (error: any) {
+      setDeleteDocError(error.response?.data?.message || 'Không thể xóa tài liệu');
     } finally {
       setIsDeletingDoc(false);
     }
@@ -154,7 +156,7 @@ const ProjectOverview: React.FC = () => {
       const url = await documentService.getDownloadUrl(projectId, doc.id, true);
       window.open(url, '_blank');
     } catch (e) {
-      toast.error('Không thể mở tài liệu');
+      toast.error('Không thể mở tài liệu', { id: 'preview-err' });
     }
   };
 
@@ -243,7 +245,7 @@ const ProjectOverview: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSaveProjectInfo}
-                  disabled={isSaving || !editName.trim()}
+                  disabled={isSaving || !editName.trim() || (editName === overview.name && editDesc === overview.description)}
                   className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1 shadow-sm"
                 >
                   {isSaving ? <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> : <span className="material-symbols-outlined text-[16px]">save</span>}
@@ -397,10 +399,10 @@ const ProjectOverview: React.FC = () => {
                             <button onClick={() => { setActiveDropdown(null); handleDownload(doc); }} className="w-full text-left px-4 py-2 text-sm hover:bg-surface-container flex items-center gap-2">
                               <span className="material-symbols-outlined text-[16px]">download</span> Tải xuống
                             </button>
-                            <button onClick={() => { setActiveDropdown(null); setEditDoc(doc); setEditFileName(doc.fileName); setEditDescription(doc.description || ''); }} className="w-full text-left px-4 py-2 text-sm hover:bg-surface-container flex items-center gap-2">
+                            <button onClick={() => { setActiveDropdown(null); setEditDoc(doc); setEditFileName(doc.fileName); setEditDescription(doc.description || ''); setEditDocError(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-surface-container flex items-center gap-2">
                               <span className="material-symbols-outlined text-[16px]">edit</span> Chỉnh sửa
                             </button>
-                            <button onClick={() => { setActiveDropdown(null); setDeleteDoc(doc); }} className="w-full text-left px-4 py-2 text-sm hover:bg-error/10 text-error flex items-center gap-2">
+                            <button onClick={() => { setActiveDropdown(null); setDeleteDoc(doc); setDeleteDocError(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-error/10 text-error flex items-center gap-2">
                               <span className="material-symbols-outlined text-[16px]">delete</span> Xóa
                             </button>
                           </div>
@@ -539,7 +541,10 @@ const ProjectOverview: React.FC = () => {
                   <input 
                     type="text" 
                     value={editFileName} 
-                    onChange={e => setEditFileName(e.target.value)}
+                    onChange={e => {
+                      setEditFileName(e.target.value);
+                      setEditDocError(null);
+                    }}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
                 </div>
@@ -547,15 +552,33 @@ const ProjectOverview: React.FC = () => {
                   <label className="block text-sm font-semibold mb-1">Mô tả (tùy chọn)</label>
                   <textarea 
                     value={editDescription} 
-                    onChange={e => setEditDescription(e.target.value)}
+                    onChange={e => {
+                      setEditDescription(e.target.value);
+                      setEditDocError(null);
+                    }}
                     className="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-1 focus:ring-primary min-h-[100px] resize-y"
                     placeholder="Nhập ghi chú cho tài liệu này..."
                   ></textarea>
                 </div>
+                
+                {editDocError && (
+                  <div className="p-3 bg-error-container/20 text-error rounded-xl text-sm font-medium border border-error/20">
+                    {editDocError}
+                  </div>
+                )}
               </div>
               <div className="p-6 border-t border-outline-variant/30 flex justify-end gap-3 bg-surface-container-lowest">
                 <button onClick={() => setEditDoc(null)} className="px-5 py-2 rounded-xl text-sm font-bold text-on-surface-variant hover:bg-outline-variant/20">Hủy</button>
-                <button onClick={handleUpdateDocument} disabled={isSavingDoc || !editFileName.trim()} className="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-white disabled:opacity-50 flex items-center gap-2">
+                <button 
+                  onClick={handleUpdateDocument} 
+                  disabled={
+                    isSavingDoc || 
+                    !editFileName.trim() || 
+                    !!editDocError ||
+                    (editFileName === editDoc.fileName && editDescription === (editDoc.description || ''))
+                  } 
+                  className="px-5 py-2 rounded-xl text-sm font-bold bg-primary text-white disabled:opacity-50 flex items-center gap-2"
+                >
                   {isSavingDoc ? <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> : 'Lưu'}
                 </button>
               </div>
@@ -581,9 +604,15 @@ const ProjectOverview: React.FC = () => {
               <h3 className="text-lg font-bold mb-2">Xóa tài liệu?</h3>
               <p className="text-on-surface-variant text-sm mb-6">Bạn có chắc chắn muốn xóa tài liệu <span className="font-semibold text-on-surface">"{deleteDoc.fileName}"</span>? Hành động này không thể hoàn tác.</p>
               
+              {deleteDocError && (
+                <div className="p-3 mb-6 bg-error-container/20 text-error rounded-xl text-sm font-medium border border-error/20">
+                  {deleteDocError}
+                </div>
+              )}
+              
               <div className="flex gap-3 w-full">
                 <button onClick={() => setDeleteDoc(null)} className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-surface-container hover:bg-outline-variant/20 transition-colors">Hủy</button>
-                <button onClick={handleDeleteDocument} disabled={isDeletingDoc} className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-error text-white hover:bg-error/90 disabled:opacity-50 transition-colors flex justify-center items-center gap-2">
+                <button onClick={handleDeleteDocument} disabled={isDeletingDoc || !!deleteDocError} className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-error text-white hover:bg-error/90 disabled:opacity-50 transition-colors flex justify-center items-center gap-2">
                   {isDeletingDoc ? <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> : 'Xóa ngay'}
                 </button>
               </div>

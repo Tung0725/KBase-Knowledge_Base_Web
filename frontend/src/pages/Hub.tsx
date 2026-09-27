@@ -10,6 +10,22 @@ import CreateProjectModal from '../components/CreateProjectModal';
 import ProjectSettingsModal from '../components/ProjectSettingsModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
+const getProjectColor = (id: string) => {
+  const colors = [
+    { iconBg: 'bg-rose-500/20 text-rose-600 dark:text-rose-400', borderTop: 'border-t-rose-500', hoverBg: 'hover:bg-rose-500/5' },
+    { iconBg: 'bg-blue-500/20 text-blue-600 dark:text-blue-400', borderTop: 'border-t-blue-500', hoverBg: 'hover:bg-blue-500/5' },
+    { iconBg: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', borderTop: 'border-t-emerald-500', hoverBg: 'hover:bg-emerald-500/5' },
+    { iconBg: 'bg-purple-500/20 text-purple-600 dark:text-purple-400', borderTop: 'border-t-purple-500', hoverBg: 'hover:bg-purple-500/5' },
+    { iconBg: 'bg-amber-500/20 text-amber-600 dark:text-amber-400', borderTop: 'border-t-amber-500', hoverBg: 'hover:bg-amber-500/5' },
+    { iconBg: 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400', borderTop: 'border-t-indigo-500', hoverBg: 'hover:bg-indigo-500/5' },
+  ];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
 const Hub: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const { logout, user } = useAuth();
@@ -92,15 +108,17 @@ const Hub: React.FC = () => {
 
   const renderProjectGrid = (projectList: Project[]) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-      {projectList.map((project) => (
+      {projectList.map((project) => {
+        const pColor = getProjectColor(project.id);
+        return (
         <article 
           key={project.id} 
           onClick={() => navigate(`/projects/${project.id}`)}
-          className="group relative bg-surface-container-lowest hover:bg-surface-container-lowest/80 border border-outline-variant/30 rounded-2xl p-5 flex flex-col justify-between min-h-[220px] cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+          className={`group relative bg-surface-container-high ${pColor.hoverBg} border-x border-b border-outline-variant/30 border-t-4 ${pColor.borderTop} rounded-2xl p-5 flex flex-col justify-between min-h-[220px] cursor-pointer shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden`}
         >
-          <div>
+          <div className="relative z-10">
             <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-xl font-bold font-display shadow-xs">
+              <div className={`w-12 h-12 rounded-xl ${pColor.iconBg} flex items-center justify-center text-xl font-bold font-display shadow-sm ring-1 ring-inset ring-black/5 dark:ring-white/10`}>
                 {project.name.charAt(0).toUpperCase()}
               </div>
               <div className="relative">
@@ -161,9 +179,6 @@ const Hub: React.FC = () => {
 
             <h3 className="font-bold text-on-surface text-[17px] leading-snug line-clamp-2 mb-2 font-display flex items-center gap-2">
               {project.name}
-              {project.isPublic && (
-                <span className="material-symbols-outlined text-[16px] text-on-surface-variant" title="Công khai">public</span>
-              )}
             </h3>
             {project.description && (
               <p className="text-sm text-on-surface-variant line-clamp-2">
@@ -191,7 +206,8 @@ const Hub: React.FC = () => {
             </div>
           </div>
         </article>
-      ))}
+        );
+      })}
     </div>
   );
 
@@ -200,7 +216,7 @@ const Hub: React.FC = () => {
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-5 min-h-[200px] flex flex-col justify-between animate-pulse shadow-sm">
+            <div key={n} className="bg-surface-container-high rounded-2xl border border-outline-variant/30 p-5 min-h-[200px] flex flex-col justify-between animate-pulse shadow-sm">
               <div>
                 <div className="w-12 h-12 bg-surface-container rounded-xl mb-4"></div>
                 <div className="h-5 bg-surface-container rounded w-3/4 mb-3"></div>
@@ -219,7 +235,7 @@ const Hub: React.FC = () => {
     if (searchQuery) {
       if (searchResults.length === 0) {
         return (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface-container-lowest rounded-3xl border border-outline-variant/30 border-dashed">
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface-container-high rounded-3xl border border-outline-variant/30 border-dashed">
             <span className="material-symbols-outlined text-5xl mb-4 text-outline-variant">search_off</span>
             <h3 className="text-lg font-bold text-on-surface mb-2">Không tìm thấy kết quả nào</h3>
             <p className="text-on-surface-variant text-sm max-w-md mx-auto">
@@ -254,7 +270,7 @@ const Hub: React.FC = () => {
     if (filteredProjects.length === 0 && !error) {
       if (activeTab !== 'ALL') {
         return (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface-container-lowest rounded-3xl border border-outline-variant/30 border-dashed">
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-surface-container-high rounded-3xl border border-outline-variant/30 border-dashed">
             <span className="material-symbols-outlined text-5xl mb-4 text-outline-variant">folder_off</span>
             <h3 className="text-lg font-bold text-on-surface mb-2">Không có dự án nào</h3>
             <p className="text-on-surface-variant text-sm max-w-md mx-auto">
@@ -266,17 +282,36 @@ const Hub: React.FC = () => {
 
       // Default empty state
       return (
-        <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-surface-container-lowest rounded-3xl border border-outline-variant/30 border-dashed">
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-surface-container-high rounded-3xl border border-outline-variant/30 border-dashed">
           <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
             <span className="material-symbols-outlined text-4xl">folder_open</span>
           </div>
           <h3 className="text-xl font-bold text-on-surface mb-2">Bạn chưa có dự án nào</h3>
-          <p className="text-on-surface-variant max-w-md mx-auto mb-8 text-sm">
+          <p className="text-on-surface-variant max-w-md mx-auto mb-8 text-sm leading-relaxed">
             {user?.role === 'USER'
-              ? 'Bạn chưa tham gia dự án nào. Hãy đợi người quản trị (Owner) mời bạn vào dự án để bắt đầu làm việc.'
+              ? 'Bạn hiện chưa tham gia dự án nào. Nếu bạn là Trưởng nhóm (PM) đang chuẩn bị làm đồ án, vui lòng liên hệ Admin để được cấp quyền tạo dự án nhé.'
               : 'Tạo không gian làm việc đầu tiên của bạn để bắt đầu lưu trữ tài liệu, quản lý tri thức và chia sẻ cùng đội ngũ.'}
           </p>
-          {user?.role !== 'USER' && (
+          {user?.role === 'USER' ? (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a 
+                href="https://zalo.me/0379624371" 
+                target="_blank" 
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-[#0068FF] hover:bg-[#0054cc] rounded-full shadow-sm hover:shadow-md transition-all"
+              >
+                <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" className="w-5 h-5 bg-white rounded-full p-0.5" />
+                <span>Liên hệ Zalo Admin</span>
+              </a>
+              <a 
+                href="mailto:duytung200575456@gmail.com"
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-on-surface bg-surface-container hover:bg-surface-container-high rounded-full border border-outline-variant/30 transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">mail</span>
+                <span>Gửi Email</span>
+              </a>
+            </div>
+          ) : (
             <button 
               onClick={() => setIsCreateModalOpen(true)}
               className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-primary-container hover:bg-blue-700 rounded-full shadow-sm hover:shadow-md transition-all"
@@ -425,11 +460,11 @@ const Hub: React.FC = () => {
           <div className="flex items-center gap-2 font-medium">
             <span className="font-bold text-on-surface">KBase Hub</span>
             <span>•</span>
-            <span>Phiên bản 2.4.0</span>
+            <span>Phiên bản 0.0.1</span>
           </div>
           <div className="flex items-center gap-5">
-            <a className="hover:text-primary transition-colors font-medium" href="#">Tài liệu</a>
-            <a className="hover:text-primary transition-colors font-medium" href="#">Bảo mật</a>
+            <Link className="hover:text-primary transition-colors font-medium" to="/guide">Hướng dẫn</Link>
+            <Link className="hover:text-primary transition-colors font-medium" to="/privacy">Bảo mật</Link>
           </div>
         </div>
       </footer>

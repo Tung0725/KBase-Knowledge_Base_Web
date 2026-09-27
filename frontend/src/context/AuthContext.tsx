@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, type AuthResponse } from '../services/authService';
+import { toast } from 'react-hot-toast';
 
 interface AuthContextType {
   user: AuthResponse | null;
@@ -34,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    toast.success('Đăng xuất thành công!');
   };
 
   return (

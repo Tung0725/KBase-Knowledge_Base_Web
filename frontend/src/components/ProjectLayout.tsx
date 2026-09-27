@@ -52,7 +52,6 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
     { id: 'chat', label: 'Chat AI', icon: 'forum', path: `${basePath}/chat` },
     { id: 'documents', label: 'Tài liệu', icon: 'description', path: `${basePath}/documents` },
     { id: 'members', label: 'Thành viên', icon: 'group', path: `${basePath}/members` },
-    { id: 'settings', label: 'Cài đặt', icon: 'settings', path: `${basePath}/settings` },
   ];
 
   return (

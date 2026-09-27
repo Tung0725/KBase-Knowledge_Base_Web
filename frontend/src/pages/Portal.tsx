@@ -492,7 +492,7 @@ const Portal: React.FC = () => {
                     </li>
                     <li className="flex items-start gap-2 text-on-surface font-body-sm text-body-sm">
                       <span className="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">manage_search</span>
-                      <span>Tìm kiếm nội dung tài liệu bằng công nghệ Smart Index</span>
+                      <span>Quản lý và tra cứu tài nguyên dự án nhanh chóng</span>
                     </li>
                     <li className="flex items-start gap-2 text-on-surface font-body-sm text-body-sm">
                       <span className="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">comment</span>
@@ -504,7 +504,7 @@ const Portal: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-secondary text-[20px]">bolt</span>
                     <p className="font-label-sm text-[12px] text-on-surface">
-                      Tốc độ tải lên trung bình: <span className="font-semibold">45 MB/giây</span>
+                      Tốc độ tải lên <span className="font-semibold">ổn định & mượt mà</span>
                     </p>
                   </div>
                 </div>
@@ -546,8 +546,8 @@ const Portal: React.FC = () => {
                 </div>
                 <div className="pt-space-md bg-surface-container-low rounded-DEFAULT p-space-md">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-on-surface-variant">Bảo mật đạt chuẩn</span>
-                    <span className="px-2 py-0.5 rounded-full bg-secondary-fixed text-secondary font-semibold text-[11px]">SOC2 Type II</span>
+                    <span className="text-on-surface-variant">Bảo mật xác thực</span>
+                    <span className="px-2 py-0.5 rounded-full bg-secondary-fixed text-secondary font-semibold text-[11px]">JWT Auth</span>
                   </div>
                 </div>
               </div>
@@ -593,11 +593,11 @@ const Portal: React.FC = () => {
                   <div className="space-y-space-sm">
                     <div className="flex items-center gap-space-sm">
                       <span className="w-2 h-2 rounded-full bg-secondary"></span>
-                      <span className="font-body-sm text-body-sm text-on-surface">Khả năng mở rộng dung lượng linh hoạt tới 10 Terabytes cho tổ chức</span>
+                      <span className="font-body-sm text-body-sm text-on-surface">Quản lý giới hạn dung lượng lưu trữ (Quota) cho từng dự án</span>
                     </div>
                     <div className="flex items-center gap-space-sm">
                       <span className="w-2 h-2 rounded-full bg-secondary"></span>
-                      <span className="font-body-sm text-body-sm text-on-surface">Tự động gắn nhãn (Auto-tagging) và tạo phụ đề video bằng AI thông minh</span>
+                      <span className="font-body-sm text-body-sm text-on-surface">Xem trước tài liệu và phát video mượt mà ngay trên trình duyệt</span>
                     </div>
                   </div>
                 </div>
@@ -677,31 +677,95 @@ const Portal: React.FC = () => {
               <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-secondary-fixed/20 blur-2xl pointer-events-none"></div>
               <div className="relative max-w-2xl mx-auto flex flex-col items-center">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-on-primary/10 text-on-primary font-label-sm text-label-sm mb-space-md backdrop-blur-sm">
-                  <span className="material-symbols-outlined text-[16px]">verified</span>
-                  <span>Khởi chạy miễn phí • Không yêu cầu thẻ tín dụng</span>
+                  <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                  <span>Hệ thống đóng • Yêu cầu cấp quyền</span>
                 </span>
                 <h2 className="font-display text-headline-lg md:text-display font-bold mb-space-md leading-tight tracking-tight text-on-primary">
-                  Sẵn sàng đưa tri thức dự án vào trật tự?
+                  Sẵn sàng khởi tạo không gian nhóm?
                 </h2>
-                <p className="font-body-lg text-body-lg text-primary-fixed mb-space-xl max-w-xl">
-                  Thiết lập không gian KBase đầu tiên của bạn chỉ trong 30 giây. Hoàn toàn miễn phí cho nhóm dự án nhỏ và đồ án sinh viên.
+                <p className="font-body-lg text-body-lg text-primary-fixed mb-space-xl max-w-xl mx-auto text-center">
+                  KBase là một hệ thống đóng. Bất kỳ ai cũng có thể đăng ký, nhưng để khởi tạo Dự án mới, bạn cần liên hệ với Quản trị viên (Admin) để được xét duyệt và cấp quyền Trưởng nhóm (PM).
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-space-md w-full max-w-md">
-                  <Link className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-4 rounded-full bg-surface-container-lowest text-primary font-label-md text-label-md font-semibold shadow-lg hover:bg-surface-container-low transition-colors" to={user ? "/hub" : "/auth"}>
-                    <span>Bắt đầu sử dụng KBase ngay</span>
-                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                  </Link>
-                  <a className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-lg py-4 rounded-full bg-on-primary/10 text-on-primary font-label-md text-label-md hover:bg-on-primary/20 transition-colors backdrop-blur-sm" href="#">
-                    <span className="material-symbols-outlined text-[18px]">support_agent</span>
-                    <span>Liên hệ hỗ trợ tổ chức</span>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-space-md w-full max-w-lg mx-auto">
+                  <a className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-xl py-4 rounded-full bg-surface-container-lowest text-[#0068FF] font-label-md text-label-md font-bold shadow-lg hover:bg-surface-container-low transition-colors" href="https://zalo.me/0379624371" target="_blank" rel="noreferrer">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" className="w-5 h-5 bg-white rounded-full p-0.5" />
+                    <span>Liên hệ Zalo Admin</span>
                   </a>
+                  <Link className="w-full sm:w-auto inline-flex items-center justify-center gap-space-xs px-space-lg py-4 rounded-full bg-on-primary/10 text-on-primary font-label-md text-label-md hover:bg-on-primary/20 transition-colors backdrop-blur-sm border border-on-primary/20" to={user ? "/hub" : "/auth"}>
+                    <span className="material-symbols-outlined text-[18px]">login</span>
+                    <span>Đăng nhập hệ thống</span>
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
         </AnimatedSection>
       </div></main>
-      <footer className="w-full bg-surface-container-lowest shadow-[0_-1px_6px_rgba(0,0,0,0.03)]"><div className="max-w-[1280px] mx-auto px-gutter pt-space-xl pb-space-lg"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-gutter-lg mb-space-xl"><div className="lg:col-span-2 flex flex-col items-start pr-space-lg"><div className="flex items-center gap-space-sm mb-space-sm"><img src={logoImg} alt="KBase Logo" className="h-9 w-auto object-contain" /><span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface">KBase</span></div><p className="font-body-sm text-body-sm text-on-surface-variant max-w-sm mb-space-md">Không gian tổng hợp tri thức, tài liệu và quy trình dự án hiện đại. Được tối ưu hoá để loại bỏ phân mảnh thông tin trong các nhóm nghiên cứu và phát triển.</p><div className="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"><span className="w-2 h-2 rounded-full bg-secondary"></span><span>Hệ thống hoạt động ổn định</span></div></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Sản phẩm</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Tính năng cốt lõi</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Kho lưu trữ thông minh</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="pricing" href="#">Gói chi phí & Ưu đãi</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="landing-page" href="#">Lộ trình phát triển</a></li></ul></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Giải pháp đội ngũ</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Dành cho Project Manager</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="solutions" href="#">Dành cho Thành viên</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="roles-permissions" href="#">Quản trị viên (Admin)</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Bảo mật & Tuân thủ</a></li></ul></div><div><h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Tài nguyên</h4><ul className="flex flex-col gap-space-sm"><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="documentation" href="#">Tài liệu hướng dẫn</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Chính sách bảo mật</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Điều khoản dịch vụ</a></li><li className="font-body-sm text-body-sm"><a className="text-on-surface-variant hover:text-on-surface transition-colors" data-path="documentation" href="#">Trung tâm hỗ trợ</a></li></ul></div></div><div className="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm"><p className="font-label-sm text-label-sm text-on-surface-variant">© 2026 KBase Hub. Bản quyền được bảo hộ.</p><div className="flex items-center gap-space-md"><a className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="security" href="#">Bảo mật dữ liệu</a><a className="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="terms-of-service" href="#">Quyền riêng tư</a></div></div></div></footer>
+      <footer className="w-full bg-surface-container-lowest shadow-[0_-1px_6px_rgba(0,0,0,0.03)]">
+        <div className="max-w-[1280px] mx-auto px-gutter pt-space-xl pb-space-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter-lg mb-space-xl">
+            <div className="lg:col-span-2 flex flex-col items-start pr-space-lg">
+              <div className="flex items-center gap-space-sm mb-space-sm">
+                <img src={logoImg} alt="KBase Logo" className="h-9 w-auto object-contain" />
+                <span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface">KBase</span>
+              </div>
+              <p className="font-body-sm text-body-sm text-on-surface-variant max-w-sm mb-space-md">
+                Dự án Tri Thức Đổi Mới 2026. Một giải pháp quản lý tri thức và tài nguyên dành cho sinh viên và nhóm nghiên cứu, loại bỏ sự phân mảnh thông tin.
+              </p>
+              <div className="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+                <span className="w-2 h-2 rounded-full bg-secondary"></span>
+                <span>Dự án thuộc Tổ chức Duy Tùng KBase phát hành</span>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Liên hệ</h4>
+              <ul className="flex flex-col gap-space-sm">
+                <li className="font-body-sm text-body-sm text-on-surface-variant flex items-start gap-2">
+                  <span className="material-symbols-outlined text-[16px] mt-0.5">location_on</span>
+                  <span>Lô E2a-7, Đường D1 Khu Công nghệ cao, P. Long Thạnh Mỹ, TP. Thủ Đức, TP. HCM</span>
+                </li>
+                <li className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">call</span>
+                  <span>0379624371</span>
+                </li>
+                <li className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">mail</span>
+                  <a href="mailto:duytung200575456@gmail.com" className="hover:text-primary transition-colors">duytung200575456@gmail.com</a>
+                </li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-label-md text-label-md text-on-surface font-semibold mb-space-md">Tài nguyên</h4>
+              <ul className="flex flex-col gap-space-sm">
+                <li className="font-body-sm text-body-sm">
+                  <Link className="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2" to="/about">
+                    <span className="material-symbols-outlined text-[16px]">info</span>
+                    Giới thiệu dự án KBase
+                  </Link>
+                </li>
+                <li className="font-body-sm text-body-sm">
+                  <Link className="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2" to="/guide">
+                    <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                    Hướng dẫn sử dụng
+                  </Link>
+                </li>
+                <li className="font-body-sm text-body-sm">
+                  <Link className="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2" to="/privacy">
+                    <span className="material-symbols-outlined text-[16px]">shield</span>
+                    Chính sách & Bảo mật
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="pt-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm border-t border-outline-variant/30">
+            <p className="font-label-sm text-label-sm text-on-surface-variant">© 2026 Bản quyền thuộc Duy Tùng KBase. Sản xuất tại FPT University Ho Chi Minh City Campus.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

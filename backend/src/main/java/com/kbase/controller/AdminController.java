@@ -49,21 +49,14 @@ public class AdminController {
     @GetMapping("/projects")
     public ResponseEntity<ApiResponse<PageResponse<AdminProjectResponse>>> getAllProjects(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean isPublic,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-        PageResponse<AdminProjectResponse> projects = adminService.getAllProjects(search, isPublic, page, size, sortBy);
+        PageResponse<AdminProjectResponse> projects = adminService.getAllProjects(search, page, size, sortBy);
         return ResponseEntity.ok(ApiResponse.success(projects, "Success"));
     }
 
-    @PutMapping("/projects/{projectId}/status")
-    public ResponseEntity<ApiResponse<Void>> updateProjectStatus(
-            @PathVariable java.util.UUID projectId,
-            @RequestParam boolean isPublic) {
-        adminService.updateProjectStatus(projectId, isPublic);
-        return ResponseEntity.ok(ApiResponse.success(null, "Project status updated successfully"));
-    }
+
 
     @PutMapping("/projects/{projectId}/quota")
     public ResponseEntity<ApiResponse<Void>> updateProjectQuota(

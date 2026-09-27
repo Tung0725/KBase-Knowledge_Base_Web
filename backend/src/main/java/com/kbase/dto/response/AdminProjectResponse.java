@@ -21,9 +21,5 @@ public class AdminProjectResponse {
     private int membersCount;
     private long usedStorageBytes;
     private long storageQuotaBytes;
-    
-    @JsonProperty("isPublic")
-    private boolean isPublic;
-    
     private LocalDateTime createdAt;
 }

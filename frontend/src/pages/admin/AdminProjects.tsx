@@ -9,7 +9,6 @@ const AdminProjects: React.FC = () => {
 
   // Search and Filter states
   const [search, setSearch] = useState('');
-  const [isPublicFilter, setIsPublicFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   
   // Pagination states
@@ -29,13 +28,12 @@ const AdminProjects: React.FC = () => {
       fetchProjects();
     }, 500);
     return () => clearTimeout(timer);
-  }, [search, isPublicFilter, sortBy, currentPage]);
+  }, [search, sortBy, currentPage]);
 
   const fetchProjects = async () => {
     try {
       setIsLoading(true);
-      const isPublicParam = isPublicFilter === '' ? undefined : isPublicFilter === 'true';
-      const data = await adminService.getProjects(search, isPublicParam, currentPage, pageSize, sortBy);
+      const data = await adminService.getProjects(search, currentPage, pageSize, sortBy);
       setProjects(data.content);
       setTotalPages(data.totalPages);
       setTotalElements(data.totalElements);
@@ -61,14 +59,7 @@ const AdminProjects: React.FC = () => {
     });
   };
 
-  const handleToggleStatus = async (projectId: string, currentStatus: boolean) => {
-    try {
-      await adminService.updateProjectStatus(projectId, !currentStatus);
-      fetchProjects();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Lỗi khi cập nhật trạng thái');
-    }
-  };
+
 
   const openQuotaModal = (projectId: string, currentQuotaBytes: number) => {
     setSelectedProjectId(projectId);
@@ -109,20 +100,7 @@ const AdminProjects: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-lowest border border-outline-variant/50 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
-          <div className="w-48 relative">
-            <select
-              value={isPublicFilter}
-              onChange={(e) => { setIsPublicFilter(e.target.value); setCurrentPage(0); }}
-              className="w-full appearance-none bg-surface-container-lowest border border-outline-variant/50 px-4 py-2 pr-10 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="true">Công khai (Public)</option>
-              <option value="false">Nội bộ (Private)</option>
-            </select>
-            <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-outline">
-              <span className="material-symbols-outlined text-[18px]">expand_more</span>
-            </span>
-          </div>
+
           <div className="w-56 relative">
             <select
               value={sortBy}
@@ -171,7 +149,6 @@ const AdminProjects: React.FC = () => {
                   <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant uppercase tracking-wider text-center">Thành viên</th>
                   <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant uppercase tracking-wider text-center min-w-[200px]">Lưu trữ</th>
                   <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant uppercase tracking-wider text-center">Ngày tạo</th>
-                  <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant uppercase tracking-wider text-center">Trạng thái</th>
                   <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant uppercase tracking-wider text-right">Thao tác</th>
                 </tr>
               </thead>
@@ -192,22 +169,6 @@ const AdminProjects: React.FC = () => {
                         <span className="text-on-surface-variant">{formatBytes(p.storageQuotaBytes)}</span>
                       </td>
                       <td className="px-4 py-2 text-center text-sm text-on-surface-variant">{formatDate(p.createdAt)}</td>
-                      <td className="px-4 py-2 text-center">
-                        <button
-                          onClick={() => handleToggleStatus(p.id, p.isPublic)}
-                          className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1 transition-colors ${
-                            p.isPublic 
-                              ? 'bg-secondary/10 text-secondary hover:bg-secondary/20' 
-                              : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'
-                          }`}
-                          title="Bấm để đổi trạng thái"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">
-                            {p.isPublic ? 'public' : 'lock'}
-                          </span>
-                          {p.isPublic ? 'Public' : 'Private'}
-                        </button>
-                      </td>
                       <td className="px-4 py-2 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button

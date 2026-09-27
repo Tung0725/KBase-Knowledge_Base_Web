@@ -23,4 +23,6 @@ public class UploadRequest {
     
     @NotBlank(message = "File type cannot be empty")
     private String fileType;
+    
+    private String description;
 }

@@ -23,8 +23,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,6 +43,7 @@ public class DocumentService {
     private final UserRepository userRepository;
     private final MinioClient minioClient;
     private final DocumentAiService documentAiService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("${minio.bucket-name}")
     private String bucketName;
@@ -67,7 +71,7 @@ public class DocumentService {
                 .orElseThrow(() -> new IllegalArgumentException("You don't have access to this project"));
 
         if (requireWriteAccess && member.getRole() == ProjectMember.ProjectRole.VIEWER) {
-            throw new IllegalArgumentException("Viewers cannot upload documents");
+            throw new IllegalArgumentException("Người xem (Viewer) không có quyền sửa, xóa tài liệu");
         }
     }
 
@@ -95,6 +99,7 @@ public class DocumentService {
                 .objectKey(objectKey)
                 .fileSizeBytes(request.getFileSizeBytes())
                 .fileType(request.getFileType())
+                .description(request.getDescription())
                 .status(Document.DocumentStatus.PENDING)
                 .build();
 
@@ -168,15 +173,20 @@ public class DocumentService {
 
         // Nạp vào AI Vector DB ngầm (Async) để không block API
         final Document finalDoc = document;
-        java.util.concurrent.CompletableFuture.runAsync(() -> {
-            try {
-                documentAiService.ingestDocument(
-                    finalDoc.getObjectKey(), 
-                    finalDoc.getId().toString(), 
-                    finalDoc.getProject().getId().toString()
-                );
-            } catch (Exception e) {
-                System.err.println("Async AI Ingestion failed: " + e.getMessage());
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                java.util.concurrent.CompletableFuture.runAsync(() -> {
+                    try {
+                        documentAiService.ingestDocument(
+                            finalDoc.getObjectKey(), 
+                            finalDoc.getId().toString(), 
+                            finalDoc.getProject().getId().toString()
+                        );
+                    } catch (Exception e) {
+                        System.err.println("Async AI Ingestion failed: " + e.getMessage());
+                    }
+                });
             }
         });
 
@@ -222,6 +232,21 @@ public class DocumentService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String getDocumentContent(UUID projectId, UUID documentId) {
+        User currentUser = getCurrentAuthenticatedUser();
+        checkProjectAccess(projectId, currentUser, false); // Viewers can see documents
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+
+        if (!document.getProject().getId().equals(projectId)) {
+            throw new IllegalArgumentException("Document does not belong to this project");
+        }
+
+        return document.getRawContent();
     }
 
     private String getFileExtension(String fileName) {
@@ -282,6 +307,12 @@ public class DocumentService {
             throw new IllegalArgumentException("Document does not belong to this project");
         }
 
+        if (currentUser.getRole() != User.Role.ADMIN 
+            && !document.getProject().getOwner().getId().equals(currentUser.getId())
+            && !document.getUploadedBy().getId().equals(currentUser.getId())) {
+            throw new IllegalArgumentException("Bạn chỉ được phép xóa tài liệu do chính mình tải lên");
+        }
+
         Project project = document.getProject();
 
         // 1. Delete from MinIO if it was uploaded
@@ -298,12 +329,14 @@ public class DocumentService {
                 System.err.println("Failed to delete object from MinIO: " + e.getMessage());
             }
 
-            // 2. Reduce project storage
             project.setUsedStorageBytes(Math.max(0, project.getUsedStorageBytes() - document.getFileSizeBytes()));
             projectRepository.save(project);
         }
 
-        // 3. Delete from DB
+        // 3. Delete from Vector DB
+        jdbcTemplate.update("DELETE FROM document_embeddings WHERE metadata->>'documentId' = ?", documentId.toString());
+
+        // 4. Delete from DB
         documentRepository.delete(document);
     }
 }

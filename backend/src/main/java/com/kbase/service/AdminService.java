@@ -208,7 +208,7 @@ public class AdminService {
         return mapToAdminUserResponse(user);
     }
 
-    public PageResponse<AdminProjectResponse> getAllProjects(String search, Boolean isPublic, int page, int size, String sortBy) {
+    public PageResponse<AdminProjectResponse> getAllProjects(String search, int page, int size, String sortBy) {
         String keyword = (search == null) ? "" : removeAccents(search.trim());
         
         Pageable pageable;
@@ -217,8 +217,7 @@ public class AdminService {
         } else {
             pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         }
-        
-        Page<Project> projectsPage = projectRepository.searchProjectsPaginated(keyword, isPublic, pageable);
+        Page<Project> projectsPage = projectRepository.searchProjectsPaginated(keyword, pageable);
         return PageResponse.of(projectsPage.map(this::mapToAdminProjectResponse));
     }
     
@@ -229,13 +228,7 @@ public class AdminService {
         return pattern.matcher(normalized).replaceAll("").replace('đ','d').replace('Đ','D');
     }
 
-    @Transactional
-    public void updateProjectStatus(UUID projectId, boolean isPublic) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-        project.setIsPublic(isPublic);
-        projectRepository.save(project);
-    }
+
 
     @Transactional
     public void updateProjectQuota(UUID projectId, long newQuotaBytes) {
@@ -308,7 +301,6 @@ public class AdminService {
                 .membersCount(projectMemberRepository.findByProjectId(project.getId()).size() + 1) // +1 for owner
                 .usedStorageBytes(project.getUsedStorageBytes())
                 .storageQuotaBytes(project.getStorageQuotaBytes())
-                .isPublic(project.getIsPublic())
                 .createdAt(project.getCreatedAt())
                 .build();
     }

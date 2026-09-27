@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { toast } from 'react-hot-toast';
 
 const Profile: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -14,24 +15,21 @@ const Profile: React.FC = () => {
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Password Form State
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  const hasProfileChanges = fullName !== (user?.fullName || '') || phoneNumber !== (user?.phoneNumber || '');
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccessMessage(null);
+
 
     if (!fullName.trim()) {
-      setError('Họ tên không được để trống');
+      toast.error('Họ tên không được để trống');
       return;
     }
 
@@ -39,9 +37,9 @@ const Profile: React.FC = () => {
     try {
       const updatedUser = await authService.updateProfile({ fullName, phoneNumber });
       setUser({ ...user, ...updatedUser } as any);
-      setSuccessMessage('Cập nhật hồ sơ thành công!');
+      toast.success('Cập nhật hồ sơ thành công!');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật hồ sơ');
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật hồ sơ');
     } finally {
       setIsSubmitting(false);
     }
@@ -49,18 +47,16 @@ const Profile: React.FC = () => {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError(null);
-    setPasswordSuccess(null);
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Mật khẩu xác nhận không khớp');
+      toast.error('Mật khẩu xác nhận không khớp');
       return;
     }
 
     setIsSubmittingPassword(true);
     try {
-      await authService.changePassword({ currentPassword, newPassword, confirmPassword });
-      setPasswordSuccess(user?.hasPassword ? 'Đổi mật khẩu thành công!' : 'Tạo mật khẩu thành công!');
+      await authService.changePassword({ oldPassword: currentPassword, newPassword });
+      toast.success(user?.hasPassword ? 'Đổi mật khẩu thành công!' : 'Tạo mật khẩu thành công!');
       if (!user?.hasPassword) {
         setUser({ ...user, hasPassword: true } as any);
       }
@@ -68,7 +64,7 @@ const Profile: React.FC = () => {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setPasswordError(err.response?.data?.message || 'Có lỗi xảy ra khi xử lý mật khẩu');
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi xử lý mật khẩu');
     } finally {
       setIsSubmittingPassword(false);
     }
@@ -151,20 +147,6 @@ const Profile: React.FC = () => {
                 </div>
               </div>
 
-              {error && (
-                <div className="mb-6 p-4 bg-error-container/20 border border-error/30 rounded-xl text-error text-sm flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] shrink-0">error</span>
-                  <p>{error}</p>
-                </div>
-              )}
-
-              {successMessage && (
-                <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-600 dark:text-green-400 text-sm flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] shrink-0">check_circle</span>
-                  <p>{successMessage}</p>
-                </div>
-              )}
-
               <form onSubmit={handleProfileSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-semibold text-on-surface mb-2">
@@ -217,7 +199,7 @@ const Profile: React.FC = () => {
                 <div className="pt-6 flex justify-end gap-3 border-t border-outline-variant/30 mt-8">
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !hasProfileChanges}
                     className="px-6 py-2.5 rounded-full text-sm font-semibold bg-primary text-on-primary hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
                   >
                     {isSubmitting ? (
@@ -249,20 +231,6 @@ const Profile: React.FC = () => {
                     : 'Thiết lập mật khẩu để có thể đăng nhập bằng Email ngoài việc dùng Google.'}
                 </p>
               </div>
-
-              {passwordError && (
-                <div className="mb-6 p-4 bg-error-container/20 border border-error/30 rounded-xl text-error text-sm flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] shrink-0">error</span>
-                  <p>{passwordError}</p>
-                </div>
-              )}
-
-              {passwordSuccess && (
-                <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-600 dark:text-green-400 text-sm flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] shrink-0">check_circle</span>
-                  <p>{passwordSuccess}</p>
-                </div>
-              )}
 
               <form onSubmit={handlePasswordSubmit} className="space-y-5">
                 {user?.hasPassword && (

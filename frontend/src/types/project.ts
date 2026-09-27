@@ -4,7 +4,6 @@ export interface Project {
   description: string;
   storageQuotaBytes: number;
   usedStorageBytes: number;
-  isPublic: boolean;
   ownerId: string;
   ownerEmail: string;
   inviteCode?: string;
@@ -32,7 +31,6 @@ export interface Document {
 export interface ProjectOverviewResponse {
   name: string;
   description: string;
-  isPublic: boolean;
   totalDocuments: number;
   storageQuotaBytes: number;
   usedStorageBytes: number;
@@ -61,7 +59,6 @@ export interface CreateProjectRequest {
 export interface UpdateProjectRequest {
   name: string;
   description: string;
-  isPublic: boolean;
 }
 
 export type ProjectRole = 'OWNER' | 'EDITOR' | 'VIEWER';

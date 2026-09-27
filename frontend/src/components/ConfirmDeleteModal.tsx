@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { projectService } from '../services/projectService';
 import type { Project } from '../types/project';
+import { toast } from 'react-hot-toast';
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -27,11 +28,13 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose
     try {
       setIsSubmitting(true);
       await projectService.deleteProject(project.id);
+      toast.success('Đã xóa dự án thành công!');
       onSuccess();
       setConfirmName('');
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi xóa dự án');
+      const msg = err.response?.data?.message || 'Có lỗi xảy ra khi xóa dự án';
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,7 +108,7 @@ const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({ isOpen, onClose
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting || confirmName !== project.name}
+                    disabled={isSubmitting || confirmName !== project.name || !!error}
                     className="px-5 py-2 text-sm font-semibold bg-error text-white hover:bg-red-700 transition-colors rounded-full shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting ? 'Đang xóa...' : 'Xóa vĩnh viễn'}

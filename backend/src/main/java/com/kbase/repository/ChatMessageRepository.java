@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID> {
     List<ChatMessage> findByProjectIdAndUserIdOrderByCreatedAtAsc(UUID projectId, UUID userId);
+    void deleteAllByProjectId(UUID projectId);
 }

@@ -48,6 +48,15 @@ public class DocumentController {
         return ResponseEntity.ok(ApiResponse.success(Map.of("downloadUrl", url), "URL generated successfully"));
     }
 
+    @GetMapping("/{documentId}/content")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getDocumentContent(
+            @PathVariable UUID projectId,
+            @PathVariable UUID documentId
+    ) {
+        String content = documentService.getDocumentContent(projectId, documentId);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("content", content != null ? content : ""), "Document content retrieved successfully"));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<java.util.List<DocumentResponse>>> getProjectDocuments(
             @PathVariable UUID projectId

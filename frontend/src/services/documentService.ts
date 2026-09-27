@@ -13,11 +13,12 @@ export const documentService = {
     return response.data.data;
   },
 
-  uploadToMinio: async (uploadUrl: string, file: File, onProgress?: (percent: number) => void): Promise<void> => {
+  uploadToMinio: async (uploadUrl: string, file: File, onProgress?: (percent: number) => void, signal?: AbortSignal): Promise<void> => {
     await axios.put(uploadUrl, file, {
       headers: {
         'Content-Type': file.type || 'application/octet-stream',
       },
+      signal,
       onUploadProgress: (progressEvent) => {
         if (progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);

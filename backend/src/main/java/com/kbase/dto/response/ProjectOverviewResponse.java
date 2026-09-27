@@ -15,8 +15,6 @@ import java.util.Map;
 public class ProjectOverviewResponse {
     private String name;
     private String description;
-    private Boolean isPublic;
-    
     private long totalDocuments;
     private long storageQuotaBytes;
     private long usedStorageBytes;

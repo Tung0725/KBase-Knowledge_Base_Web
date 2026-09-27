@@ -11,8 +11,10 @@ import com.kbase.repository.DocumentRepository;
 import com.kbase.repository.ProjectMemberRepository;
 import com.kbase.entity.Document;
 import com.kbase.entity.ProjectMember;
+import com.kbase.repository.ChatMessageRepository;
 import com.kbase.dto.response.ProjectOverviewResponse;
 import com.kbase.dto.response.DocumentResponse;
+import org.springframework.jdbc.core.JdbcTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -38,6 +40,8 @@ public class ProjectService {
     private final UserRepository userRepository;
     private final DocumentRepository documentRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     /**
      * Helper method to get the current authenticated user.
@@ -45,11 +49,11 @@ public class ProjectService {
     public User getCurrentAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new IllegalArgumentException("User is not authenticated");
+            throw new IllegalArgumentException("Người dùng chưa đăng nhập");
         }
         String email = authentication.getName();
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
     }
 
     /**
@@ -108,15 +112,14 @@ public class ProjectService {
     public ProjectResponse updateProject(UUID projectId, ProjectUpdateRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dự án"));
 
         if (currentUser.getRole() != User.Role.ADMIN && !project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("You don't have permission to update this project");
+            throw new IllegalArgumentException("Bạn không có quyền cập nhật dự án này");
         }
 
         project.setName(request.getName());
         project.setDescription(request.getDescription());
-        project.setIsPublic(request.getIsPublic());
 
         project = projectRepository.save(project);
         return mapToResponse(project);
@@ -135,14 +138,20 @@ public class ProjectService {
     public void deleteProject(UUID projectId) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dự án"));
 
         if (currentUser.getRole() != User.Role.ADMIN && !project.getOwner().getId().equals(currentUser.getId())) {
-            throw new IllegalArgumentException("You don't have permission to delete this project");
+            throw new IllegalArgumentException("Bạn không có quyền xóa dự án này");
         }
 
-        // TODO: Call MinIO to delete associated files for this project to free up physical storage.
+        // Delete child entities to prevent Foreign Key constraint violations
+        documentRepository.deleteAllByProjectId(projectId);
+        projectMemberRepository.deleteAllByProjectId(projectId);
+        chatMessageRepository.deleteAllByProjectId(projectId);
         
+        // Clean up vector database
+        jdbcTemplate.update("DELETE FROM document_embeddings WHERE metadata->>'projectId' = ?", projectId.toString());
+
         projectRepository.delete(project);
     }
 
@@ -158,12 +167,12 @@ public class ProjectService {
     public ProjectOverviewResponse getProjectOverview(UUID projectId) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("Project not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dự án"));
 
         if (currentUser.getRole() != User.Role.ADMIN && !project.getOwner().getId().equals(currentUser.getId())) {
             boolean isMember = projectMemberRepository.existsByProjectIdAndUserId(projectId, currentUser.getId());
             if (!isMember) {
-                throw new IllegalArgumentException("You don't have access to this project");
+                throw new IllegalArgumentException("Bạn không có quyền truy cập dự án này");
             }
         }
 
@@ -187,7 +196,6 @@ public class ProjectService {
         return ProjectOverviewResponse.builder()
                 .name(project.getName())
                 .description(project.getDescription())
-                .isPublic(project.getIsPublic())
                 .totalDocuments(totalDocuments)
                 .storageQuotaBytes(project.getStorageQuotaBytes())
                 .usedStorageBytes(project.getUsedStorageBytes())
@@ -223,7 +231,6 @@ public class ProjectService {
                 .description(project.getDescription())
                 .storageQuotaBytes(project.getStorageQuotaBytes())
                 .usedStorageBytes(project.getUsedStorageBytes())
-                .isPublic(project.getIsPublic())
                 .inviteCode(project.getInviteCode())
                 .isInviteLinkActive(project.getIsInviteLinkActive())
                 .ownerId(project.getOwner().getId())

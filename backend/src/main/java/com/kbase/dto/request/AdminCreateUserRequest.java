@@ -21,7 +21,7 @@ public class AdminCreateUserRequest {
     )
     private String password;
 
-    @jakarta.validation.constraints.Pattern(regexp = "^\\d{10,15}$", message = "Số điện thoại không hợp lệ (chỉ chứa số, 10-15 ký tự)")
+    @jakarta.validation.constraints.Pattern(regexp = "^(\\d{10,15})?$", message = "Số điện thoại không hợp lệ (chỉ chứa số, 10-15 ký tự)")
     private String phoneNumber;
 
     @NotBlank(message = "Role is required")

@@ -26,11 +26,6 @@ public class Project extends BaseEntity {
     @Builder.Default
     private Long usedStorageBytes = 0L;
 
-    @Column(name = "is_public", nullable = false, columnDefinition = "boolean default false")
-    @Builder.Default
-    @com.fasterxml.jackson.annotation.JsonProperty("isPublic")
-    private Boolean isPublic = false;
-
     @Column(name = "invite_code", unique = true, length = 100)
     private String inviteCode;
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { projectService } from '../services/projectService';
+import { toast } from 'react-hot-toast';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -31,12 +32,14 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
     try {
       setIsSubmitting(true);
       await projectService.createProject({ name, description });
+      toast.success('Tạo dự án thành công!');
       setName('');
       setDescription('');
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi tạo dự án');
+      const msg = err.response?.data?.message || 'Có lỗi xảy ra khi tạo dự án';
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -53,7 +56,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
             className="absolute inset-0 bg-inverse-surface/40 backdrop-blur-sm"
             onClick={!isSubmitting ? onClose : undefined}
           />
-          
+
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -82,7 +85,10 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
                     id="name"
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setError(null);
+                    }}
                     disabled={isSubmitting}
                     className="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface disabled:opacity-50"
                     placeholder="VD: KBase Project"
@@ -97,7 +103,10 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
                   <textarea
                     id="description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      setError(null);
+                    }}
                     disabled={isSubmitting}
                     rows={4}
                     className="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-on-surface disabled:opacity-50 resize-none"
@@ -116,8 +125,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="px-5 py-2 text-sm font-semibold bg-primary-container text-white hover:bg-blue-700 transition-colors rounded-full shadow-sm disabled:opacity-50 flex items-center gap-2"
+                    disabled={isSubmitting || !!error}
+                    className="px-5 py-2 text-sm font-semibold bg-primary-container text-white hover:bg-blue-700 transition-colors rounded-full shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {isSubmitting ? (
                       <>

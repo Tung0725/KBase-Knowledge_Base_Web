@@ -21,14 +21,12 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
     List<Project> findAllProjectsForUser(@Param("userId") UUID userId);
 
     @Query("SELECT p FROM Project p WHERE " +
-           "(:isPublic IS NULL OR p.isPublic = :isPublic) " +
-           "AND (:keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    List<Project> searchProjects(@Param("keyword") String keyword, @Param("isPublic") Boolean isPublic);
+           "(:keyword = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    List<Project> searchProjects(@Param("keyword") String keyword);
 
     @Query("SELECT p FROM Project p WHERE " +
-           "(:isPublic IS NULL OR p.isPublic = :isPublic) " +
-           "AND (:keyword = '' OR " +
+           "(:keyword = '' OR " +
            "LOWER(function('translate', p.name, 'áàãạảăắằẵặẳâấầẫậẩéèẽẹẻêếềễệểíìĩịỉóòõọỏôốồỗộổơớờỡợởúùũụủưứừữựửýỳỹỵỷđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyyd')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(function('translate', p.owner.email, 'áàãạảăắằẵặẳâấầẫậẩéèẽẹẻêếềễệểíìĩịỉóòõọỏôốồỗộổơớờỡợởúùũụủưứừữựửýỳỹỵỷđ', 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyyyd')) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<Project> searchProjectsPaginated(@Param("keyword") String keyword, @Param("isPublic") Boolean isPublic, Pageable pageable);
+    Page<Project> searchProjectsPaginated(@Param("keyword") String keyword, Pageable pageable);
 }

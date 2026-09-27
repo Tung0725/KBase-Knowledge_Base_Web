@@ -56,11 +56,11 @@ public class AuthService {
      */
     public AuthResponse register(RegisterRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new IllegalArgumentException("Passwords do not match");
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
         }
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email is already in use");
+            throw new IllegalArgumentException("Email này đã được sử dụng");
         }
 
         // Encode password before storing in Redis
@@ -99,7 +99,7 @@ public class AuthService {
      */
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản người dùng"));
 
         if (user.isDeleted()) {
             throw new IllegalArgumentException("Tài khoản không tồn tại hoặc đã bị vô hiệu hóa.");
@@ -143,12 +143,12 @@ public class AuthService {
     public AuthResponse getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new IllegalArgumentException("User is not authenticated");
+            throw new IllegalArgumentException("Người dùng chưa đăng nhập");
         }
 
         String email = authentication.getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản người dùng"));
 
         return AuthResponse.builder()
                 .token(null) // Token is usually not re-issued on simple profile fetch unless requested
@@ -203,10 +203,10 @@ public class AuthService {
                         .hasPassword(user.getPassword() != null && !"NO_PASSWORD_GOOGLE_OAUTH".equals(user.getPassword()))
                         .build();
             } else {
-                throw new IllegalArgumentException("Invalid Google token");
+                throw new IllegalArgumentException("Token Google không hợp lệ");
             }
         } catch (Exception e) {
-            throw new RuntimeException("Google authentication failed", e);
+            throw new RuntimeException("Xác thực bằng Google thất bại", e);
         }
     }
 

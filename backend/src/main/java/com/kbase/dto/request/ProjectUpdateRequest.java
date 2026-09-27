@@ -17,8 +17,4 @@ public class ProjectUpdateRequest {
     private String name;
 
     private String description;
-
-    @NotNull(message = "Trạng thái public không được để trống")
-    @com.fasterxml.jackson.annotation.JsonProperty("isPublic")
-    private Boolean isPublic;
 }

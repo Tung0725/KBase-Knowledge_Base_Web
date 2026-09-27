@@ -48,7 +48,7 @@ const Auth: React.FC = () => {
             setIsLoading(false);
             return;
         }
-        const response = await authService.register({ email, password, confirmPassword, fullName, phoneNumber });
+        const response = await authService.register({ email, password, fullName });
         setToastMessage(response.message || 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
         setIsToastError(false);
         setShowToast(true);
@@ -145,9 +145,9 @@ const Auth: React.FC = () => {
         </Link>
 
         <div className="flex items-center gap-4 sm:gap-6 text-[13px] sm:text-sm">
-          <a className="text-on-surface-variant hover:text-on-surface font-medium transition-colors hidden md:inline-block" href="#">
+          <Link className="text-on-surface-variant hover:text-on-surface font-medium transition-colors hidden md:inline-block" to="/guide">
             Trợ giúp
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -355,9 +355,9 @@ const Auth: React.FC = () => {
               <div className="text-center pt-2">
                 <p className="text-[12px] text-outline leading-relaxed">
                   Bằng việc đăng nhập, bạn đồng ý với{' '}
-                  <a className="text-on-surface-variant hover:text-primary underline underline-offset-2 transition-colors" href="#">Điều khoản dịch vụ</a>
+                  <Link className="text-on-surface-variant hover:text-primary underline underline-offset-2 transition-colors" to="/terms">Điều khoản dịch vụ</Link>
                   {' '}và{' '}
-                  <a className="text-on-surface-variant hover:text-primary underline underline-offset-2 transition-colors" href="#">Chính sách quyền riêng tư</a>
+                  <Link className="text-on-surface-variant hover:text-primary underline underline-offset-2 transition-colors" to="/privacy">Chính sách quyền riêng tư</Link>
                   {' '}của KBase.
                 </p>
               </div>

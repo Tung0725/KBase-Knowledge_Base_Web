@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(BadCredentialsException ex) {
         // Obscure the exact reason (e.g. email not found vs wrong password) for security (OWASP A02/A07)
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid email or password"));
+                .body(ApiResponse.error("Email hoặc mật khẩu không chính xác"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
         
         ApiResponse<Map<String, String>> response = new ApiResponse<>();
         response.setSuccess(false);
-        response.setMessage("Validation failed");
+        response.setMessage("Xác thực dữ liệu thất bại");
         response.setData(errors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

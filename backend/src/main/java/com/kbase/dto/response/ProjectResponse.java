@@ -18,9 +18,6 @@ public class ProjectResponse {
     private String description;
     private Long storageQuotaBytes;
     private Long usedStorageBytes;
-    
-    @com.fasterxml.jackson.annotation.JsonProperty("isPublic")
-    private Boolean isPublic;
 
     private String inviteCode;
 

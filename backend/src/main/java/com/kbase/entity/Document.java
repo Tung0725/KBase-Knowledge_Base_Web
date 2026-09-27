@@ -35,6 +35,9 @@ public class Document extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(columnDefinition = "TEXT")
+    private String rawContent;
+
     private String tag;
 
     @Enumerated(EnumType.STRING)
