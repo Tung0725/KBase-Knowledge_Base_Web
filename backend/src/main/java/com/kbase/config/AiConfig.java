@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.URI;
 import java.time.Duration;
 
 @Configuration
@@ -52,12 +53,11 @@ public class AiConfig {
 
     @Bean
     public EmbeddingStore<TextSegment> pgVectorEmbeddingStore() {
-        // Parse DB config from JDBC URL: jdbc:postgresql://localhost:5433/kbase_db
-        String cleanUrl = datasourceUrl.replace("jdbc:postgresql://", "");
-        String host = cleanUrl.split(":")[0];
-        String portAndDb = cleanUrl.split(":")[1];
-        Integer port = Integer.parseInt(portAndDb.split("/")[0]);
-        String database = portAndDb.split("/")[1].split("\\?")[0];
+        // Parse DB config using URI to handle both local (with port) and cloud URLs (without port)
+        URI uri = URI.create(datasourceUrl.replace("jdbc:", ""));
+        String host = uri.getHost();
+        int port = uri.getPort() == -1 ? 5432 : uri.getPort();
+        String database = uri.getPath().replaceFirst("/", "");
 
         return PgVectorEmbeddingStore.builder()
                 .host(host)
@@ -68,6 +68,7 @@ public class AiConfig {
                 .table("document_embeddings")
                 .dimension(384) // all-minilm-l6-v2 outputs 384 dimensions
                 .dropTableFirst(false)
+                .ssl(true)
                 .build();
     }
 }
