@@ -11,8 +11,11 @@ class WebSocketService {
       return;
     }
 
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+    const wsBase = apiBase.replace(/^http/, 'ws').replace('/api', '');
+
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/ws-kbase', // Assuming backend is on port 8080
+      brokerURL: `${wsBase}/ws-kbase`,
       reconnectDelay: 5000,
       onConnect: () => {
         this.subscribe(projectId, onUpdate);
