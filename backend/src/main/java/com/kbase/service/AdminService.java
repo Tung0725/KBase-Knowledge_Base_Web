@@ -231,6 +231,7 @@ public class AdminService {
 
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = "project_overview", key = "#projectId")
     public void updateProjectQuota(UUID projectId, long newQuotaBytes) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));

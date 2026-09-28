@@ -20,6 +20,7 @@ const AdminLayout = React.lazy(() => import('../pages/admin/AdminLayout'));
 const AdminDashboard = React.lazy(() => import('../pages/admin/AdminDashboard'));
 const AdminUsers = React.lazy(() => import('../pages/admin/AdminUsers'));
 const AdminProjects = React.lazy(() => import('../pages/admin/AdminProjects'));
+const NotFound = React.lazy(() => import('../pages/NotFound'));
 
 // A simple loading spinner to show while chunks are downloading
 const FallbackLoading = () => (
@@ -54,6 +55,9 @@ const AppRoutes = () => {
             
             {/* Admin specific project workspace route */}
             <Route path="/admin/projects/:projectId/*" element={<ProtectedRoute requiredRole="ADMIN"><ProjectWorkspace /></ProtectedRoute>} />
+
+            {/* Catch-all: any unknown URL shows 404 instead of blank screen */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </AuthProvider>

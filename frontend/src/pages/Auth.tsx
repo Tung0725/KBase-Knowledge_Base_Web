@@ -132,6 +132,7 @@ const Auth: React.FC = () => {
 
 
   return (
+    <div className="overflow-hidden min-h-screen">
     <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }} className="bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-primary">
 
       <header className="w-full px-6 sm:px-12 py-5 sm:py-7 flex items-center justify-between z-10 bg-transparent">
@@ -287,7 +288,7 @@ const Auth: React.FC = () => {
                   <div className="relative flex items-center">
                     <input className="w-full pl-4 pr-11 py-3 bg-surface-container-lowest border border-outline-variant/80 rounded-xl text-on-surface placeholder:text-outline text-body-md focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all shadow-sm disabled:opacity-50" id="passwordInput" placeholder="Mật khẩu" required type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading} />
                     <button aria-label="Hiển thị mật khẩu" className="absolute right-3.5 text-outline hover:text-on-surface transition-colors p-0.5 focus:outline-none" onClick={() => setShowPassword(!showPassword)} title="Hiển thị/Ẩn mật khẩu" type="button" disabled={isLoading}>
-                      <span className="material-symbols-outlined text-[20px]" id="pwdEyeIcon">{showPassword ? "visibility_off" : "visibility"}</span>
+                      <span className="material-symbols-outlined text-[20px] mt-1" id="pwdEyeIcon">{showPassword ? "visibility_off" : "visibility"}</span>
                     </button>
                   </div>
                 </div>
@@ -369,12 +370,13 @@ const Auth: React.FC = () => {
       </main>
 
       <footer className="w-full py-4 text-center text-xs text-outline font-medium">
-        KBase • Không gian Quản trị Tri thức & Bản quyền Học thuật 2026
+        @ Bản quyền thuộc Duy Tùng KBase 2026
       </footer>
 
 
 
     </motion.div>
+    </div>
   );
 };
 

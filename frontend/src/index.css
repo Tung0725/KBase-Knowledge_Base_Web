@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Override Material Symbols font-display to prevent FOUT (Flash of Unstyled Text).
+   'block' renders invisible glyphs while the font loads instead of showing raw text. */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-display: block;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {

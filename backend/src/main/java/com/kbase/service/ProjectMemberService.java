@@ -1,6 +1,7 @@
 package com.kbase.service;
 
 import com.kbase.dto.request.AddMemberRequest;
+import com.kbase.dto.response.InviteLinkResponse;
 import com.kbase.dto.response.ProjectMemberResponse;
 import com.kbase.entity.Project;
 import com.kbase.entity.ProjectMember;
@@ -149,38 +150,79 @@ public class ProjectMemberService {
      * Generate or regenerate an invite link code.
      */
     @Transactional
-    public String regenerateInviteCode(UUID projectId) {
+    public InviteLinkResponse regenerateInviteCode(UUID projectId, String appBaseUrl) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
-                
+
         checkManagePermission(project, currentUser, "regenerate invite code");
-        
+
         project.setInviteCode(UUID.randomUUID().toString());
         project.setIsInviteLinkActive(true);
         projectRepository.save(project);
-        
-        return project.getInviteCode();
+
+        return buildInviteLinkResponse(project, appBaseUrl);
     }
     
+    /**
+     * Get the current invite link configuration for a project.
+     */
+    @Transactional(readOnly = true)
+    public InviteLinkResponse getInviteLink(UUID projectId, String appBaseUrl) {
+        User currentUser = getCurrentAuthenticatedUser();
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found"));
+
+        checkManagePermission(project, currentUser, "view invite link");
+        return buildInviteLinkResponse(project, appBaseUrl);
+    }
+
     /**
      * Toggle the invite link status (Active / Inactive).
      */
     @Transactional
-    public boolean toggleInviteLink(UUID projectId, boolean isActive) {
+    public InviteLinkResponse toggleInviteLink(UUID projectId, boolean isActive, String appBaseUrl) {
         User currentUser = getCurrentAuthenticatedUser();
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
-                
+
         checkManagePermission(project, currentUser, "toggle invite link");
-        
+
         if (project.getInviteCode() == null && isActive) {
             project.setInviteCode(UUID.randomUUID().toString());
         }
-        
+
         project.setIsInviteLinkActive(isActive);
         projectRepository.save(project);
-        return project.getIsInviteLinkActive();
+        return buildInviteLinkResponse(project, appBaseUrl);
+    }
+
+    /**
+     * Update the default role assigned when someone joins via invite link.
+     */
+    @Transactional
+    public InviteLinkResponse updateInviteRole(UUID projectId, ProjectMember.ProjectRole role, String appBaseUrl) {
+        User currentUser = getCurrentAuthenticatedUser();
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found"));
+
+        checkManagePermission(project, currentUser, "update invite role");
+
+        project.setInviteRole(role);
+        projectRepository.save(project);
+        return buildInviteLinkResponse(project, appBaseUrl);
+    }
+
+    private InviteLinkResponse buildInviteLinkResponse(Project project, String appBaseUrl) {
+        String inviteUrl = project.getInviteCode() != null
+                ? appBaseUrl + "/join/" + project.getInviteCode()
+                : null;
+        return InviteLinkResponse.builder()
+                .isActive(project.getIsInviteLinkActive())
+                .inviteCode(project.getInviteCode())
+                .inviteUrl(inviteUrl)
+                .inviteRole(project.getInviteRole())
+                .build();
     }
     
     /**
@@ -208,7 +250,7 @@ public class ProjectMemberService {
         ProjectMember newMember = ProjectMember.builder()
                 .project(project)
                 .user(currentUser)
-                .role(ProjectMember.ProjectRole.VIEWER) // Default role for invite link is VIEWER
+                .role(project.getInviteRole()) // Use project's configured invite role
                 .build();
                 
         newMember = projectMemberRepository.save(newMember);

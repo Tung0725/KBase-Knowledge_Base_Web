@@ -1,6 +1,13 @@
 import apiClient from './apiClient';
 import type { Project, CreateProjectRequest, UpdateProjectRequest, ProjectMember, AddMemberRequest, ProjectRole } from '../types/project';
 
+export interface InviteLinkInfo {
+  isActive: boolean;
+  inviteCode: string | null;
+  inviteUrl: string | null;
+  inviteRole: ProjectRole;
+}
+
 export const projectService = {
   getMyProjects: async (): Promise<Project[]> => {
     const response = await apiClient.get('/projects');
@@ -40,14 +47,32 @@ export const projectService = {
     await apiClient.delete(`/projects/${projectId}/members/${userId}`);
   },
 
-  regenerateInviteCode: async (projectId: string): Promise<string> => {
-    const response = await apiClient.post(`/projects/${projectId}/invite-link/regenerate`);
-    return response.data.data;
+  getInviteLink: async (projectId: string): Promise<InviteLinkInfo> => {
+    const response = await apiClient.get(`/projects/${projectId}/invite-link`);
+    const data = response.data.data;
+    if (data.inviteCode) data.inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
+    return data;
   },
 
-  toggleInviteLink: async (projectId: string, active: boolean): Promise<boolean> => {
+  regenerateInviteCode: async (projectId: string): Promise<InviteLinkInfo> => {
+    const response = await apiClient.post(`/projects/${projectId}/invite-link/regenerate`);
+    const data = response.data.data;
+    if (data.inviteCode) data.inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
+    return data;
+  },
+
+  toggleInviteLink: async (projectId: string, active: boolean): Promise<InviteLinkInfo> => {
     const response = await apiClient.post(`/projects/${projectId}/invite-link/toggle?active=${active}`);
-    return response.data.data;
+    const data = response.data.data;
+    if (data.inviteCode) data.inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
+    return data;
+  },
+
+  updateInviteRole: async (projectId: string, role: ProjectRole): Promise<InviteLinkInfo> => {
+    const response = await apiClient.put(`/projects/${projectId}/invite-link/role?role=${role}`);
+    const data = response.data.data;
+    if (data.inviteCode) data.inviteUrl = `${window.location.origin}/join/${data.inviteCode}`;
+    return data;
   },
 
   joinProjectByInviteCode: async (inviteCode: string): Promise<ProjectMember> => {

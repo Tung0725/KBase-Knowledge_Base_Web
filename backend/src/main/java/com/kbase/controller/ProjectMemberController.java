@@ -2,8 +2,11 @@ package com.kbase.controller;
 
 import com.kbase.dto.request.AddMemberRequest;
 import com.kbase.dto.response.ApiResponse;
+import com.kbase.dto.response.InviteLinkResponse;
 import com.kbase.dto.response.ProjectMemberResponse;
+import com.kbase.entity.ProjectMember;
 import com.kbase.service.ProjectMemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +24,12 @@ import java.util.UUID;
 public class ProjectMemberController {
 
     private final ProjectMemberService projectMemberService;
+
+    private String resolveAppBaseUrl(HttpServletRequest request) {
+        return request.getScheme() + "://" + request.getServerName()
+                + (request.getServerPort() != 80 && request.getServerPort() != 443
+                        ? ":" + request.getServerPort() : "");
+    }
 
     @GetMapping("/{projectId}/members")
     public ResponseEntity<ApiResponse<List<ProjectMemberResponse>>> getProjectMembers(@PathVariable UUID projectId) {
@@ -46,19 +55,46 @@ public class ProjectMemberController {
         return ResponseEntity.ok(ApiResponse.success(null, "Member removed successfully"));
     }
 
-    @PostMapping("/{projectId}/invite-link/regenerate")
-    public ResponseEntity<ApiResponse<String>> regenerateInviteCode(@PathVariable UUID projectId) {
-        String inviteCode = projectMemberService.regenerateInviteCode(projectId);
-        return ResponseEntity.ok(ApiResponse.success(inviteCode, "Invite code regenerated successfully"));
+    /** Get current invite link configuration (code, active state, invite role). */
+    @GetMapping("/{projectId}/invite-link")
+    public ResponseEntity<ApiResponse<InviteLinkResponse>> getInviteLink(
+            @PathVariable UUID projectId,
+            HttpServletRequest request
+    ) {
+        InviteLinkResponse response = projectMemberService.getInviteLink(projectId, resolveAppBaseUrl(request));
+        return ResponseEntity.ok(ApiResponse.success(response, "Invite link fetched successfully"));
     }
 
-    @PostMapping("/{projectId}/invite-link/toggle")
-    public ResponseEntity<ApiResponse<Boolean>> toggleInviteLink(
+    /** Regenerate the invite code (invalidates the old one). */
+    @PostMapping("/{projectId}/invite-link/regenerate")
+    public ResponseEntity<ApiResponse<InviteLinkResponse>> regenerateInviteCode(
             @PathVariable UUID projectId,
-            @RequestParam boolean active
+            HttpServletRequest request
     ) {
-        boolean isActive = projectMemberService.toggleInviteLink(projectId, active);
-        return ResponseEntity.ok(ApiResponse.success(isActive, "Invite link status updated"));
+        InviteLinkResponse response = projectMemberService.regenerateInviteCode(projectId, resolveAppBaseUrl(request));
+        return ResponseEntity.ok(ApiResponse.success(response, "Invite code regenerated successfully"));
+    }
+
+    /** Toggle the invite link on or off. */
+    @PostMapping("/{projectId}/invite-link/toggle")
+    public ResponseEntity<ApiResponse<InviteLinkResponse>> toggleInviteLink(
+            @PathVariable UUID projectId,
+            @RequestParam boolean active,
+            HttpServletRequest request
+    ) {
+        InviteLinkResponse response = projectMemberService.toggleInviteLink(projectId, active, resolveAppBaseUrl(request));
+        return ResponseEntity.ok(ApiResponse.success(response, "Invite link status updated"));
+    }
+
+    /** Update the default role given to users who join via invite link. */
+    @PutMapping("/{projectId}/invite-link/role")
+    public ResponseEntity<ApiResponse<InviteLinkResponse>> updateInviteRole(
+            @PathVariable UUID projectId,
+            @RequestParam ProjectMember.ProjectRole role,
+            HttpServletRequest request
+    ) {
+        InviteLinkResponse response = projectMemberService.updateInviteRole(projectId, role, resolveAppBaseUrl(request));
+        return ResponseEntity.ok(ApiResponse.success(response, "Invite role updated successfully"));
     }
 
     @PostMapping("/join/{inviteCode}")
@@ -71,7 +107,7 @@ public class ProjectMemberController {
     public ResponseEntity<ApiResponse<ProjectMemberResponse>> updateMemberRole(
             @PathVariable UUID projectId,
             @PathVariable UUID userId,
-            @RequestParam com.kbase.entity.ProjectMember.ProjectRole role
+            @RequestParam ProjectMember.ProjectRole role
     ) {
         ProjectMemberResponse response = projectMemberService.updateMemberRole(projectId, userId, role);
         return ResponseEntity.ok(ApiResponse.success(response, "Member role updated successfully"));
@@ -80,7 +116,7 @@ public class ProjectMemberController {
     @PutMapping("/{projectId}/members/role")
     public ResponseEntity<ApiResponse<Void>> updateAllMembersRole(
             @PathVariable UUID projectId,
-            @RequestParam com.kbase.entity.ProjectMember.ProjectRole role
+            @RequestParam ProjectMember.ProjectRole role
     ) {
         projectMemberService.updateAllMembersRole(projectId, role);
         return ResponseEntity.ok(ApiResponse.success(null, "All member roles updated successfully"));

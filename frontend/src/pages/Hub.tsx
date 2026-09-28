@@ -9,6 +9,7 @@ import { projectService } from '../services/projectService';
 import CreateProjectModal from '../components/CreateProjectModal';
 import ProjectSettingsModal from '../components/ProjectSettingsModal';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
+import JoinProjectModal from '../components/JoinProjectModal';
 
 const getProjectColor = (id: string) => {
   const colors = [
@@ -38,6 +39,7 @@ const Hub: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [dropdownOpenId, setDropdownOpenId] = useState<string | null>(null);
 
   // Search & Filter State
@@ -416,6 +418,14 @@ const Hub: React.FC = () => {
             </nav>
 
             <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setIsJoinModalOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-on-surface bg-surface-container hover:bg-outline-variant/20 rounded-full shadow-sm hover:shadow-md transition-all border border-outline-variant/30"
+              >
+                <span className="material-symbols-outlined text-[18px]">login</span>
+                <span>Tham gia dự án</span>
+              </button>
+
               {user?.role !== 'USER' && (
                 <button 
                   onClick={() => setIsCreateModalOpen(true)}
@@ -474,6 +484,10 @@ const Hub: React.FC = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={loadProjects}
+      />
+      <JoinProjectModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
       />
       <ProjectSettingsModal
         isOpen={isSettingsModalOpen}

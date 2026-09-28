@@ -34,6 +34,11 @@ public class Project extends BaseEntity {
     @com.fasterxml.jackson.annotation.JsonProperty("isInviteLinkActive")
     private Boolean isInviteLinkActive = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "invite_role", nullable = false, length = 20, columnDefinition = "VARCHAR(20) NOT NULL DEFAULT 'VIEWER'")
+    @Builder.Default
+    private com.kbase.entity.ProjectMember.ProjectRole inviteRole = com.kbase.entity.ProjectMember.ProjectRole.VIEWER;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
