@@ -8,7 +8,10 @@ COPY src src
 RUN ./mvnw package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-alpine
+# ONNX Runtime requires libstdc++ which is not included in Alpine by default
+RUN apk add --no-cache libstdc++
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-Xmx200m", "-Xms100m", "-jar", "app.jar"]
+
