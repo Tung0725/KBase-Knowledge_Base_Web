@@ -14,6 +14,10 @@ import org.springframework.context.annotation.Configuration;
 import java.net.URI;
 import java.time.Duration;
 
+/**
+ * AI Configuration: wires up the ChatModel (DeepSeek), local EmbeddingModel,
+ * and PgVector EmbeddingStore backed by Neon PostgreSQL.
+ */
 @Configuration
 public class AiConfig {
 
@@ -34,26 +38,24 @@ public class AiConfig {
         return OpenAiChatModel.builder()
                 .baseUrl("https://api.deepseek.com")
                 .apiKey(deepseekApiKey)
-                // Sửa thành ID mô hình hiện tại đang hoạt động, ví dụ sử dụng Flash (khuyến nghị cho tác vụ thông thường)
-                .modelName("deepseek-flash")
-                // Nếu bạn thực sự cần khả năng suy luận mạnh mẽ hơn, có thể chọn deepseek-v4-pro
-                // .modelName("deepseek-v4-pro")
+                .modelName("deepseek-chat")
                 .timeout(Duration.ofSeconds(120))
-                // Lưu ý: Trong chế độ suy nghĩ, temperature thường không có hiệu lực, khuyến nghị
-                // xóa hoặc đặt ở chế độ không suy nghĩ
-                // .temperature(0.3)
                 .build();
     }
 
     @Bean
     public EmbeddingModel localEmbeddingModel() {
-        // Chạy nhúng offline ngay trong JVM (rất nhanh và miễn phí hoàn toàn)
+        // Runs embedding offline inside the JVM — free and fast
         return new AllMiniLmL6V2QuantizedEmbeddingModel();
     }
 
+    /**
+     * Uses URI parsing to support both local DBs (with port) and cloud DBs like
+     * Neon (without explicit port). SSL is handled by Spring DataSource's JDBC URL
+     * which already carries sslmode=require via application properties.
+     */
     @Bean
     public EmbeddingStore<TextSegment> pgVectorEmbeddingStore() {
-        // Parse DB config using URI to handle both local (with port) and cloud URLs (without port)
         URI uri = URI.create(datasourceUrl.replace("jdbc:", ""));
         String host = uri.getHost();
         int port = uri.getPort() == -1 ? 5432 : uri.getPort();
@@ -68,8 +70,6 @@ public class AiConfig {
                 .table("document_embeddings")
                 .dimension(384) // all-minilm-l6-v2 outputs 384 dimensions
                 .dropTableFirst(false)
-                .ssl(true)
                 .build();
     }
 }
-
