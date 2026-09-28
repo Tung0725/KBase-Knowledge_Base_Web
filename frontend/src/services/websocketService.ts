@@ -11,7 +11,7 @@ class WebSocketService {
       return;
     }
 
-    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+    const apiBase = import.meta.env.PROD ? 'https://kbase-knowledge-base-web.onrender.com/api' : 'http://localhost:8080/api';
     const wsBase = apiBase.replace(/^http/, 'ws').replace('/api', '');
 
     this.client = new Client({
