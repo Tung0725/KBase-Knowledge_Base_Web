@@ -2,8 +2,8 @@
 
 ## 1. Business Capabilities
 Hệ thống KBase được chia thành 3 phân hệ (Domains) chính:
-- **Identity & Access Management (IAM):** Quản lý đăng ký, đăng nhập và phân quyền người dùng (Admin, Owner, Member).
-- **Project Workspace Management:** Quản lý vòng đời dự án (tạo mới, thêm/bớt thành viên) và thiết lập Storage Quota.
+- **Identity & Access Management (IAM):** Quản lý đăng ký, đăng nhập và phân quyền hệ thống (System Roles: Admin, Owner, User).
+- **Project Workspace Management:** Quản lý vòng đời dự án (tạo mới dành cho Owner/Admin, thêm/bớt thành viên) và thiết lập Storage Quota.
 - **Document & Media Storage:** Xử lý nghiệp vụ tải lên, tải xuống, tự động dán nhãn (Auto-Tagging) và xem tệp tin an toàn.
 
 ## 2. Functional Requirements (User Stories)
@@ -24,8 +24,9 @@ Hệ thống KBase được chia thành 3 phân hệ (Domains) chính:
 
 ### Epic 2: Project Workspace Management
 **US-2.1: Tạo dự án mới (Create Project)**
-- **User Story:** As a Project Owner, I want to create a new project so that my team has a dedicated workspace.
+- **User Story:** As an Account Owner (System Role: OWNER) or System Admin, I want to create a new project so that my team has a dedicated workspace.
 - **Acceptance Criteria (AC):**
+  - [ ] *Pre-condition:* Tài khoản phải có System Role là `OWNER` hoặc `ADMIN`. Nếu là `USER`, API trả về 403 Forbidden và ẩn UI tạo dự án.
   - [ ] *Happy Case:* Form yêu cầu: Tên dự án (Bắt buộc), Mô tả. Hệ thống khởi tạo Project và gán mặc định Storage Quota là 5GB.
   - [ ] *Edge Case:* Trùng tên dự án (của cùng Owner) -> Báo lỗi "Tên dự án đã tồn tại".
 

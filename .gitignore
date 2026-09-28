@@ -10,6 +10,9 @@ desktop.ini
 .fk-skills
 .codex
 .cursor
+/mockups
+/tools
+
 
 # =========================
 # IDEs & EDITORS
@@ -62,3 +65,4 @@ pnpm-debug.log*
 *.swo
 .env
 *.env.*
+application-secret.yml

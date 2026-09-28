@@ -1,0 +1,16 @@
+package com.kbase.repository;
+
+import com.kbase.entity.Document;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface DocumentRepository extends JpaRepository<Document, UUID> {
+    List<Document> findByProjectId(UUID projectId);
+    List<Document> findByProjectIdAndStatus(UUID projectId, Document.DocumentStatus status);
+    void deleteAllByProjectId(UUID projectId);
+    long countByUploadedBy_Id(UUID userId);
+}

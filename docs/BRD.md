@@ -24,8 +24,8 @@ Trong các dự án làm việc nhóm hiện nay, việc lưu trữ và quản l
 ## 4. Scope and Capabilities
 
 ### In-Scope (Phase 1)
-- **Quản lý Tài khoản (User Accounts):** Đăng nhập/Đăng ký, Phân quyền cơ bản (Admin, Owner, User).
-- **Quản lý Dự án (Project Workspace):** Tạo dự án mới, mời thành viên tham gia.
+- **Quản lý Tài khoản (User Accounts):** Đăng nhập/Đăng ký, Phân quyền hệ thống 3 cấp (System Roles: Admin, Owner, User).
+- **Quản lý Dự án (Project Workspace):** Tạo dự án mới (chỉ dành cho Owner/Admin), mời thành viên tham gia.
 - **Lưu trữ Tài liệu (Document Storage):** Upload/Download đa định dạng (Docs, Images, Videos).
 - **Quản lý Dung lượng (Storage Quota):** Thiết lập giới hạn dung lượng lưu trữ tối đa cho mỗi dự án để bảo vệ hạ tầng (đặc biệt khi upload Video).
 - **Theo dõi Hoạt động (Simple Audit Log):** Lưu vết cơ bản (ai đã upload file nào, lúc nào) để dễ truy xuất.
@@ -37,8 +37,9 @@ Trong các dự án làm việc nhóm hiện nay, việc lưu trữ và quản l
 - **Watermark/DRM:** Các cơ chế bảo vệ bản quyền phức tạp chưa được áp dụng.
 
 ## 5. Business Rules
-- **BR-01:** Một tài khoản người dùng phải được gán ít nhất một Role (Admin, Owner, hoặc User).
-- **BR-02:** Chỉ Project Owner hoặc System Admin mới có quyền mời/xóa thành viên khỏi một dự án.
+- **BR-01:** Một tài khoản người dùng phải được gán chính xác một System Role duy nhất (ADMIN, OWNER, hoặc USER). 
+- **BR-01a:** Quyền khởi tạo: CHỈ tài khoản có System Role là `ADMIN` hoặc `OWNER` mới có quyền tạo Project mới. Tài khoản `USER` chỉ có thể tham gia các Project được mời.
+- **BR-02:** Chỉ Project Owner (người tạo ra project) hoặc System Admin mới có quyền mời/xóa thành viên khỏi một dự án.
 - **BR-03:** Tổng dung lượng file được upload trong một dự án không được vượt quá Storage Quota đã thiết lập (vd: 5GB). Nếu vượt quá, hệ thống sẽ chặn upload.
 
 ## 6. Constraints, Assumptions, and Risks
