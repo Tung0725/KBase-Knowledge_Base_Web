@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.kbase.dto.request.GoogleLoginRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controller responsible for Authentication APIs.
@@ -20,6 +22,7 @@ import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 
+@Tag(name = "Authentication", description = "APIs for user registration, login, and profile fetching")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -37,6 +40,7 @@ public class AuthController {
      * @param servletRequest The HTTP servlet request to get the client IP.
      * @return ApiResponse containing the AuthResponse (JWT token).
      */
+    @Operation(summary = "Register user", description = "Creates a new user account")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @Valid @RequestBody RegisterRequest request,
@@ -61,6 +65,7 @@ public class AuthController {
      * @param request Validated login payload containing email and password.
      * @return ApiResponse containing the AuthResponse (JWT token).
      */
+    @Operation(summary = "Login user", description = "Authenticates a user and returns a JWT token")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
             @Valid @RequestBody LoginRequest request
@@ -86,6 +91,7 @@ public class AuthController {
      *
      * @return ApiResponse containing the AuthResponse (User profile without token).
      */
+    @Operation(summary = "Get current user", description = "Restores user session by fetching the profile of the current authenticated user")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<AuthResponse>> getCurrentUser() {
         AuthResponse response = authService.getCurrentUser();
@@ -99,6 +105,7 @@ public class AuthController {
      * @param request Payload containing the Google token.
      * @return ApiResponse containing the AuthResponse (JWT token).
      */
+    @Operation(summary = "Google login", description = "Authenticates a user using a Google Token")
     @PostMapping("/google")
     public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(
             @Valid @RequestBody GoogleLoginRequest request
@@ -114,6 +121,7 @@ public class AuthController {
      * @param token The verification token from the email link.
      * @return ApiResponse indicating success.
      */
+    @Operation(summary = "Verify email", description = "Verifies a user's email using a token")
     @GetMapping("/verify")
     public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
         authService.verifyEmail(token);

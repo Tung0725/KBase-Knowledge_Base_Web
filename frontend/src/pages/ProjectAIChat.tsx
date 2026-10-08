@@ -132,7 +132,7 @@ const TypewriterMarkdown = ({ content, sources, onCitationClick, isTyping, onTyp
   );
 };
 
-const ChatMessage = React.memo(({ msg, idx, openCitation, setMessages }: any) => {
+const ChatMessage = React.memo(({ msg, idx, openCitation, setMessages, globalSources }: any) => {
   return (
     <div id={`message-${idx}`} className={`scroll-mt-6 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
      <div 
@@ -156,7 +156,7 @@ const ChatMessage = React.memo(({ msg, idx, openCitation, setMessages }: any) =>
             ) : (
               <TypewriterMarkdown
                 content={msg.content}
-                sources={msg.sources}
+                sources={globalSources}
                 onCitationClick={openCitation}
                 isTyping={msg.isTyping}
                 onContentChange={() => {
@@ -212,6 +212,19 @@ const ProjectAIChat: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Aggregated sources from all messages
+  const globalSources = useMemo(() => {
+    const sourceMap = new Map();
+    messages.forEach(msg => {
+      if (msg.sources) {
+        msg.sources.forEach(src => {
+          sourceMap.set(src.sourceId, src);
+        });
+      }
+    });
+    return Array.from(sourceMap.values());
+  }, [messages]);
 
   // Sources State
   const [sources, setSources] = useState<DocumentInfo[]>([]);
@@ -782,6 +795,7 @@ const ProjectAIChat: React.FC = () => {
                 idx={idx}
                 openCitation={openCitation}
                 setMessages={setMessages}
+                globalSources={globalSources}
               />
             ))}
           </div>

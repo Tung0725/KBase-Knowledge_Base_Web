@@ -159,7 +159,7 @@ public class DocumentService {
         // Auto Tagging
         String ext = getFileExtension(document.getFileName()).toLowerCase();
         String tag = "[Khác]";
-        if (ext.matches("pdf|doc|docx|txt|xls|xlsx|ppt|pptx")) {
+        if (ext.matches("pdf|doc|docx|txt|md|markdown|csv|xls|xlsx|ppt|pptx")) {
             tag = "[Tài liệu]";
         } else if (ext.matches("png|jpg|jpeg|gif|webp|svg")) {
             tag = "[Ảnh]";

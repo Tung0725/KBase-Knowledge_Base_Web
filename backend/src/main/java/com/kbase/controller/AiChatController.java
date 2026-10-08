@@ -17,7 +17,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "AI Chat", description = "APIs for interacting with the AI chat system using project documents")
 @RestController
 @RequestMapping("/api/projects/{projectId}/chat")
 @RequiredArgsConstructor
@@ -51,6 +54,7 @@ public class AiChatController {
                 .orElseThrow(() -> new IllegalArgumentException("You don't have access to this project"));
     }
 
+    @Operation(summary = "Chat with AI", description = "Sends a message to the AI and receives a response based on project documents")
     @PostMapping
     public ResponseEntity<ChatResponse> chat(
             @PathVariable UUID projectId,
@@ -66,6 +70,7 @@ public class AiChatController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Get chat history", description = "Retrieves the chat history for the current user in a project")
     @GetMapping("/history")
     public ResponseEntity<?> getHistory(@PathVariable UUID projectId) {
         User currentUser = getCurrentAuthenticatedUser();

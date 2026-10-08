@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controller responsible for Project Member management APIs.
  */
+@Tag(name = "Project Member Management", description = "APIs for managing members, roles, and invite links in projects")
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
@@ -31,12 +34,14 @@ public class ProjectMemberController {
                         ? ":" + request.getServerPort() : "");
     }
 
+    @Operation(summary = "Get project members", description = "Retrieves all members of a project")
     @GetMapping("/{projectId}/members")
     public ResponseEntity<ApiResponse<List<ProjectMemberResponse>>> getProjectMembers(@PathVariable UUID projectId) {
         List<ProjectMemberResponse> members = projectMemberService.getProjectMembers(projectId);
         return ResponseEntity.ok(ApiResponse.success(members, "Project members fetched successfully"));
     }
 
+    @Operation(summary = "Add member to project", description = "Adds a new member to a project")
     @PostMapping("/{projectId}/members")
     public ResponseEntity<ApiResponse<ProjectMemberResponse>> addMember(
             @PathVariable UUID projectId,
@@ -46,6 +51,7 @@ public class ProjectMemberController {
         return ResponseEntity.ok(ApiResponse.success(response, "Member added successfully"));
     }
 
+    @Operation(summary = "Remove member from project", description = "Removes a member from a project")
     @DeleteMapping("/{projectId}/members/{userId}")
     public ResponseEntity<ApiResponse<Void>> removeMember(
             @PathVariable UUID projectId,
@@ -56,6 +62,7 @@ public class ProjectMemberController {
     }
 
     /** Get current invite link configuration (code, active state, invite role). */
+    @Operation(summary = "Get invite link", description = "Gets current invite link configuration for a project")
     @GetMapping("/{projectId}/invite-link")
     public ResponseEntity<ApiResponse<InviteLinkResponse>> getInviteLink(
             @PathVariable UUID projectId,
@@ -66,6 +73,7 @@ public class ProjectMemberController {
     }
 
     /** Regenerate the invite code (invalidates the old one). */
+    @Operation(summary = "Regenerate invite code", description = "Regenerates the invite code and invalidates the old one")
     @PostMapping("/{projectId}/invite-link/regenerate")
     public ResponseEntity<ApiResponse<InviteLinkResponse>> regenerateInviteCode(
             @PathVariable UUID projectId,
@@ -76,6 +84,7 @@ public class ProjectMemberController {
     }
 
     /** Toggle the invite link on or off. */
+    @Operation(summary = "Toggle invite link", description = "Toggles the invite link on or off")
     @PostMapping("/{projectId}/invite-link/toggle")
     public ResponseEntity<ApiResponse<InviteLinkResponse>> toggleInviteLink(
             @PathVariable UUID projectId,
@@ -87,6 +96,7 @@ public class ProjectMemberController {
     }
 
     /** Update the default role given to users who join via invite link. */
+    @Operation(summary = "Update invite role", description = "Updates the default role given to users who join via invite link")
     @PutMapping("/{projectId}/invite-link/role")
     public ResponseEntity<ApiResponse<InviteLinkResponse>> updateInviteRole(
             @PathVariable UUID projectId,
@@ -97,12 +107,14 @@ public class ProjectMemberController {
         return ResponseEntity.ok(ApiResponse.success(response, "Invite role updated successfully"));
     }
 
+    @Operation(summary = "Join project by invite code", description = "Joins a project using an invite code")
     @PostMapping("/join/{inviteCode}")
     public ResponseEntity<ApiResponse<ProjectMemberResponse>> joinProjectByInviteCode(@PathVariable String inviteCode) {
         ProjectMemberResponse response = projectMemberService.joinProjectByInviteCode(inviteCode);
         return ResponseEntity.ok(ApiResponse.success(response, "Joined project successfully"));
     }
 
+    @Operation(summary = "Update member role", description = "Updates the role of a specific member in a project")
     @PutMapping("/{projectId}/members/{userId}/role")
     public ResponseEntity<ApiResponse<ProjectMemberResponse>> updateMemberRole(
             @PathVariable UUID projectId,
@@ -113,6 +125,7 @@ public class ProjectMemberController {
         return ResponseEntity.ok(ApiResponse.success(response, "Member role updated successfully"));
     }
 
+    @Operation(summary = "Update all members role", description = "Updates the role of all members in a project")
     @PutMapping("/{projectId}/members/role")
     public ResponseEntity<ApiResponse<Void>> updateAllMembersRole(
             @PathVariable UUID projectId,

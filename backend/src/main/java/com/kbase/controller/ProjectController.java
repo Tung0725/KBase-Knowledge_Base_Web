@@ -12,11 +12,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * Controller responsible for Project management APIs.
  * Exposes endpoints for creating and fetching projects.
  */
+@Tag(name = "Project Management", description = "APIs for creating, updating, deleting, and fetching projects")
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
@@ -31,6 +34,7 @@ public class ProjectController {
      * @param request Validated payload containing project name and description.
      * @return ApiResponse containing the created ProjectResponse.
      */
+    @Operation(summary = "Create a new project", description = "Creates a new project for the authenticated user")
     @PostMapping
     public ResponseEntity<ApiResponse<ProjectResponse>> createProject(
             @Valid @RequestBody ProjectRequest request
@@ -45,6 +49,7 @@ public class ProjectController {
      *
      * @return ApiResponse containing a list of ProjectResponse.
      */
+    @Operation(summary = "Get my projects", description = "Retrieves all projects owned by the authenticated user")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProjectResponse>>> getMyProjects() {
         List<ProjectResponse> response = projectService.getMyProjects();
@@ -59,6 +64,7 @@ public class ProjectController {
      * @param request Validated payload containing updated project details.
      * @return ApiResponse containing the updated ProjectResponse.
      */
+    @Operation(summary = "Update a project", description = "Updates an existing project")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProjectResponse>> updateProject(
             @PathVariable UUID id,
@@ -75,6 +81,7 @@ public class ProjectController {
      * @param id Project ID.
      * @return ApiResponse indicating success.
      */
+    @Operation(summary = "Delete a project", description = "Deletes a project by ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProject(
             @PathVariable UUID id
@@ -90,6 +97,7 @@ public class ProjectController {
      * @param id Project ID.
      * @return ApiResponse containing the ProjectOverviewResponse.
      */
+    @Operation(summary = "Get project overview", description = "Retrieves overview statistics for the project dashboard")
     @GetMapping("/{id}/overview")
     public ResponseEntity<ApiResponse<com.kbase.dto.response.ProjectOverviewResponse>> getProjectOverview(
             @PathVariable UUID id

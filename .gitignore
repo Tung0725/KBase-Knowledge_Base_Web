@@ -66,3 +66,6 @@ pnpm-debug.log*
 .env
 *.env.*
 application-secret.yml
+repomix-output.xml
+.repomixignore
+repomix.config.json

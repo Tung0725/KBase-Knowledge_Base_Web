@@ -20,9 +20,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AiChatService {
 
     private final ChatLanguageModel deepseekChatModel;
@@ -56,7 +58,7 @@ public class AiChatService {
 
         @dev.langchain4j.agent.tool.Tool("Tìm kiếm theo TỪ KHÓA (Keyword Search/Full-text Search). BẮT BUỘC dùng khi bạn cần tìm chính xác một mã lỗi, mã số, tên biến, hoặc khi 'searchDocument' không trả về kết quả.")
         public String keywordSearch(String keyword) {
-            System.out.println("[Agent] Quyết định gọi Tool: keywordSearch với keyword = " + keyword);
+            log.info("[Agent] Quyết định gọi Tool: keywordSearch với keyword = {}", keyword);
             
             List<UUID> docs = currentDocumentIds.get();
             String sql;
@@ -87,6 +89,7 @@ public class AiChatService {
                 currentSources.set(existingSources);
             }
             int sourceIndex = existingSources.size() + 1;
+            log.info("[Tool: keywordSearch] Base existing sources size: {}, Starting sourceIndex for this tool run: {}", existingSources.size(), sourceIndex);
 
             System.out.println("=== AI ĐANG ĐỌC CÁC ĐOẠN VĂN (KEYWORD SEARCH) ===");
             for (java.util.Map<String, Object> row : rows) {
@@ -119,7 +122,7 @@ public class AiChatService {
 
         @dev.langchain4j.agent.tool.Tool("Tìm kiếm thông tin chi tiết (Semantic Search) trong các tài liệu. BẮT BUỘC dùng khi người dùng hỏi một thông tin cụ thể.")
         public String searchDocument(String query) {
-            System.out.println("[Agent] Quyết định gọi Tool: searchDocument với query = " + query);
+            log.info("[Agent] Quyết định gọi Tool: searchDocument với query = {}", query);
             
             Filter filter = MetadataFilterBuilder.metadataKey("projectId").isEqualTo(projectId);
             List<UUID> docs = currentDocumentIds.get();
@@ -144,6 +147,7 @@ public class AiChatService {
                 currentSources.set(existingSources);
             }
             int sourceIndex = existingSources.size() + 1; // Tiếp tục đánh số từ nguồn đã có
+            log.info("[Tool: searchDocument] Base existing sources size: {}, Starting sourceIndex for this tool run: {}", existingSources.size(), sourceIndex);
 
             System.out.println("=== AI ĐANG ĐỌC CÁC ĐOẠN VĂN SAU ===");
             for (Content content : retrievedContents) {
@@ -266,8 +270,11 @@ public class AiChatService {
      */
     public com.kbase.dto.response.ChatResponse chatWithProjectDocuments(UUID projectId, UUID userId, String message, List<UUID> documentIds) {
         String key = projectId.toString() + ":" + userId.toString();
+        log.info("====== START NEW CHAT REQUEST ======");
+        log.info("User Message: {}", message);
         currentDocumentIds.set(documentIds);
         currentSources.set(new java.util.ArrayList<>());
+        log.info("-> Reset currentSources array to EMPTY for this request.");
 
         try {
             // 1. Lấy Assistant và nạp History (KHÔNG chứa câu hiện tại)
@@ -302,6 +309,17 @@ public class AiChatService {
             // 3. Cho AI bắt đầu chạy (LangChain4j sẽ tự add `message` vào memory)
             Result<String> aiResult = assistant.chat(message);
             List<com.kbase.dto.response.ChatResponse.SourceDto> sourceDtos = currentSources.get();
+
+            log.info("====== AI RESPONSE RECEIVED ======");
+            log.info("RAW AI Text Output: \n{}", aiResult.content());
+            log.info("Number of sources returned by Tool IN THIS REQUEST: {}", sourceDtos.size());
+            if (sourceDtos.isEmpty()) {
+                log.warn("=> WARNING: AI did not fetch any new sources in this request (empty list). If it outputs e.g. [1], it is hallucinating or referencing past memory!");
+            } else {
+                for (var s : sourceDtos) {
+                    log.info(" - Source ID [{}]: {}", s.getSourceId(), s.getFileName());
+                }
+            }
 
             // 2. Lưu câu trả lời của Assistant vào DB
             com.kbase.entity.ChatMessage aiMsg = com.kbase.entity.ChatMessage.builder()
