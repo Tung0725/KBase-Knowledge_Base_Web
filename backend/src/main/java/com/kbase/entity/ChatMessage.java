@@ -32,6 +32,9 @@ public class ChatMessage extends BaseEntity {
     @Column(nullable = false)
     private UUID userId;
 
+    @Column(name = "session_id")
+    private UUID sessionId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

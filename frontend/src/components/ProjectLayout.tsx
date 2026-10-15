@@ -61,7 +61,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
       <aside className={`bg-surface-container-lowest border-r border-outline-variant/30 flex flex-col transition-all duration-300 flex-shrink-0 z-20 ${isSidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className={`h-14 shrink-0 flex items-center border-b border-outline-variant/30 ${isSidebarCollapsed ? 'justify-center px-0' : 'px-6'}`}>
           <Link to={isAdminRoute ? "/admin/projects" : "/hub"} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src={logoImg} alt="KBase Logo" className="w-8 h-auto object-contain shrink-0" />
+            <img src={logoImg} alt="KBase Logo" width="32" height="32" className="w-8 h-8 object-contain shrink-0" />
             {!isSidebarCollapsed && <span className="text-xl font-bold tracking-tight text-on-surface">KBase</span>}
           </Link>
         </div>
@@ -194,7 +194,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({ children, projectName = '
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-4">
+        <main className="flex-1 overflow-auto p-2 md:p-2">
           <div className="max-w-[1400px] mx-auto w-full h-full">
             {children}
           </div>

@@ -338,7 +338,7 @@ const Hub: React.FC = () => {
       <header className="sticky top-0 z-30 bg-surface/95 backdrop-blur-md border-b border-outline-variant/30 px-6 py-3.5 transition-all shadow-sm">
         <div className="max-w-[1720px] mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src={logoImg} alt="KBase Logo" className="w-9 h-auto object-contain" />
+            <img src={logoImg} alt="KBase Logo" width="36" height="36" className="w-9 h-9 object-contain" />
             <div className="flex items-center gap-2">
               <span className="text-xl font-bold tracking-tight text-on-surface">KBase</span>
               <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-surface-container-low text-on-surface-variant border border-outline-variant/30 hidden sm:inline-block">Hub Tri thức</span>

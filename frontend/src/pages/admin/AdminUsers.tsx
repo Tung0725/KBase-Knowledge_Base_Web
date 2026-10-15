@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { adminService, type AdminUser, type AdminProject } from '../../services/adminService';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,20 +44,7 @@ const AdminUsers: React.FC = () => {
 
   const { user: currentUser } = useAuth();
 
-  useEffect(() => {
-    // Reset page when search, role, status, or sort changes
-    setPage(0);
-  }, [search, roleFilter, statusFilter, sortBy]);
-
-  useEffect(() => {
-    // Debounce fetch when states change
-    const timer = setTimeout(() => {
-      fetchUsers();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search, roleFilter, statusFilter, page, sortBy]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await adminService.getUsers(search, roleFilter, statusFilter, page, 20, sortBy);
@@ -69,7 +56,14 @@ const AdminUsers: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [search, roleFilter, statusFilter, page, sortBy]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [fetchUsers]);
 
   const handleToggleLock = async (userId: string, currentLockedStatus: boolean) => {
     if (window.confirm(`Bạn có chắc chắn muốn ${currentLockedStatus ? 'MỞ KHÓA' : 'KHÓA'} tài khoản này?\nTài khoản bị khóa sẽ không thể đăng nhập, nhưng mọi dữ liệu và dự án của họ vẫn được giữ nguyên.`)) {
@@ -207,14 +201,20 @@ const AdminUsers: React.FC = () => {
               type="text"
               placeholder="Tìm kiếm theo email, tên..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(0);
+              }}
               className="w-full pl-10 pr-4 py-2 text-sm bg-surface-container-lowest border border-outline-variant/50 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
           <div className="w-48 relative">
             <select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => {
+                setRoleFilter(e.target.value);
+                setPage(0);
+              }}
               className="w-full appearance-none bg-surface-container-lowest border border-outline-variant/50 px-4 py-2 pr-10 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             >
               <option value="">Tất cả vai trò</option>
@@ -229,7 +229,10 @@ const AdminUsers: React.FC = () => {
           <div className="w-48 relative">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(0);
+              }}
               className="w-full appearance-none bg-surface-container-lowest border border-outline-variant/50 px-4 py-2 pr-10 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             >
               <option value="">Tất cả trạng thái</option>
@@ -243,7 +246,10 @@ const AdminUsers: React.FC = () => {
           <div className="w-48 relative">
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setPage(0);
+              }}
               className="w-full appearance-none bg-surface-container-lowest border border-outline-variant/50 px-4 py-2 pr-10 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             >
               <option value="createdAt">Mới tham gia nhất</option>

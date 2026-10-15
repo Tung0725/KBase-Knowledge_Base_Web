@@ -17,10 +17,12 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    @Value("${app.frontend.url:http://localhost:5173}")
+    private String frontendUrl;
+
     public void sendVerificationEmail(String to, String token) {
         try {
-            // Frontend URL for verification. e.g., http://localhost:5173/verify?token=...
-            String verificationUrl = "http://localhost:5173/verify?token=" + token;
+            String verificationUrl = frontendUrl + "/verify?token=" + token;
             
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(senderEmail);
@@ -38,6 +40,38 @@ public class EmailService {
         } catch (Exception e) {
             log.error("Failed to send verification email to {}", to, e);
             throw new RuntimeException("Failed to send verification email", e);
+        }
+    }
+
+    /**
+     * Business Flow: Sends a password reset link to user's registered email address.
+     * Contains a secure token expiring in 15 minutes.
+     * Role Permissions: Public / System.
+     *
+     * @param to Destination recipient email address.
+     * @param token One-time cryptographic reset token.
+     */
+    public void sendPasswordResetEmail(String to, String token) {
+        try {
+            String resetUrl = frontendUrl + "/reset-password?token=" + token;
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(senderEmail);
+            message.setTo(to);
+            message.setSubject("KBase - Yêu cầu đặt lại mật khẩu");
+            message.setText("Chào bạn,\n\n" +
+                    "Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản KBase của bạn.\n" +
+                    "Vui lòng nhấn vào đường liên kết bên dưới để tạo mật khẩu mới:\n\n" +
+                    resetUrl + "\n\n" +
+                    "Lưu ý: Liên kết này chỉ có hiệu lực trong vòng 15 phút. " +
+                    "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email và mật khẩu của bạn vẫn an toàn.\n\n" +
+                    "Trân trọng,\nĐội ngũ KBase.");
+
+            javaMailSender.send(message);
+            log.info("Password reset email sent to {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send password reset email to {}", to, e);
+            throw new RuntimeException("Failed to send password reset email", e);
         }
     }
 }

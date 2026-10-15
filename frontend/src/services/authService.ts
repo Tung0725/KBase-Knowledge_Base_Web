@@ -18,12 +18,24 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password?: string;
+  confirmPassword?: string;
   fullName?: string;
+  phoneNumber?: string;
 }
 
 export interface ChangePasswordRequest {
   oldPassword?: string;
   newPassword?: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface BaseApiResponse<T = any> {
@@ -66,5 +78,15 @@ export const authService = {
   changePassword: async (data: ChangePasswordRequest): Promise<void> => {
     const response = await apiClient.put<BaseApiResponse<void>>('/users/password', data);
     return response.data.data;
+  },
+
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<BaseApiResponse<void>> => {
+    const response = await apiClient.post<BaseApiResponse<void>>('/auth/forgot-password', data);
+    return response.data;
+  },
+
+  resetPassword: async (data: ResetPasswordRequest): Promise<BaseApiResponse<void>> => {
+    const response = await apiClient.post<BaseApiResponse<void>>('/auth/reset-password', data);
+    return response.data;
   }
 };

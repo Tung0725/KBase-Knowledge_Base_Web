@@ -42,6 +42,9 @@ public class AuthControllerTest {
     private AuthService authService;
 
     @MockitoBean
+    private com.kbase.service.PasswordResetService passwordResetService;
+
+    @MockitoBean
     private RateLimitingService rateLimitingService;
 
     @MockitoBean
@@ -347,5 +350,63 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    @DisplayName("FGT_01: Yêu cầu quên mật khẩu hợp lệ trả về HTTP 200")
+    void testForgotPassword_ValidEmail_ShouldReturnOk() throws Exception {
+        com.kbase.dto.request.ForgotPasswordRequest request = new com.kbase.dto.request.ForgotPasswordRequest("user@example.com");
+
+        mockMvc.perform(post("/api/auth/forgot-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("FGT_02: Quên mật khẩu bị giới hạn tần suất trả về HTTP 429")
+    void testForgotPassword_RateLimited_ShouldReturn429() throws Exception {
+        when(mockBucket.tryConsume(1)).thenReturn(false);
+
+        com.kbase.dto.request.ForgotPasswordRequest request = new com.kbase.dto.request.ForgotPasswordRequest("user@example.com");
+
+        mockMvc.perform(post("/api/auth/forgot-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    @DisplayName("RST_01: Đặt lại mật khẩu hợp lệ trả về HTTP 200")
+    void testResetPassword_ValidRequest_ShouldReturnOk() throws Exception {
+        com.kbase.dto.request.ResetPasswordRequest request = com.kbase.dto.request.ResetPasswordRequest.builder()
+                .token("valid-uuid-token")
+                .newPassword("StrongPass@123")
+                .confirmPassword("StrongPass@123")
+                .build();
+
+        mockMvc.perform(post("/api/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("RST_02: Đặt lại mật khẩu với mật khẩu yếu trả về HTTP 400")
+    void testResetPassword_WeakPassword_ShouldReturn400() throws Exception {
+        com.kbase.dto.request.ResetPasswordRequest request = com.kbase.dto.request.ResetPasswordRequest.builder()
+                .token("valid-uuid-token")
+                .newPassword("weak")
+                .confirmPassword("weak")
+                .build();
+
+        mockMvc.perform(post("/api/auth/reset-password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

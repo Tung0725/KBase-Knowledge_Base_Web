@@ -31,12 +31,18 @@ spring:
         enabled: true
 
 app:
+  frontend:
+    url: ${FRONTEND_URL}
   jwt:
     secret: ${JWT_SECRET}
     expiration-ms: 86400000
   ai:
     deepseek:
       api-key: ${DEEPSEEK_API_KEY}
+    cohere:
+      api-key: ${COHERE_API_KEY:}
+      model-name: ${COHERE_RERANK_MODEL:rerank-v3.5}
+
   cors:
     allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
   root:

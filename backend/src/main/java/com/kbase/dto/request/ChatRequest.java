@@ -7,6 +7,9 @@ import java.util.UUID;
 
 @Data
 public class ChatRequest {
+    // Mã định danh phiên chat (Tùy chọn: Nếu rỗng/null, hệ thống tự động sinh phiên mới)
+    private UUID sessionId;
+
     @NotBlank(message = "Message cannot be empty")
     private String message;
     

@@ -2,18 +2,17 @@ package com.kbase.service;
 
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
-import dev.langchain4j.data.document.splitter.DocumentSplitters;
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.Response;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import io.minio.GetObjectArgs;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.http.Method;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import com.kbase.repository.DocumentRepository;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -22,11 +21,14 @@ import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.document.Metadata;
 
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import java.io.InputStream;
 
+/**
+ * Service responsible for parsing documents from object storage and executing
+ * the hierarchical ingestion pipeline into the vector database.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -37,12 +39,21 @@ public class DocumentAiService {
     private final EmbeddingStore<TextSegment> pgVectorEmbeddingStore;
     private final DocumentRepository documentRepository;
     private final ChatLanguageModel deepseekChatModel;
+    private final HierarchicalDocumentSplitter hierarchicalDocumentSplitter;
+    private final JdbcTemplate jdbcTemplate;
+    private final DocumentStructureParser documentStructureParser;
 
     @Value("${minio.bucket-name}")
     private String bucketName;
 
+
     /**
-     * Tải file từ MinIO, đọc, chia nhỏ và lưu vào CSDL vector.
+     * Downloads file from MinIO, parses content, executes hierarchical Parent-Child chunking,
+     * and persists enriched embeddings into the vector store.
+     *
+     * @param objectKey storage object identifier in MinIO
+     * @param documentId identifier of the document entity
+     * @param projectId identifier of the associated project
      */
     public void ingestDocument(String objectKey, String documentId, String projectId) {
         log.info("Bắt đầu Ingest file objectKey: {}", objectKey);
@@ -70,7 +81,6 @@ public class DocumentAiService {
 
         try {
             if ("[Ảnh]".equals(tag)) {
-                // Xử lý Ảnh bằng Vision API
                 log.info("Xử lý Ảnh bằng AI Vision...");
                 try (InputStream fileStream = minioClient.getObject(
                         GetObjectArgs.builder()
@@ -104,14 +114,12 @@ public class DocumentAiService {
                     dbDoc.setRawContent(fallbackText);
                 }
             } else if ("[Video]".equals(tag) || "[Khác]".equals(tag)) {
-                // Xử lý Video/Khác bằng mô tả thủ công
                 log.info("Xử lý Video/Khác bằng mô tả thủ công...");
                 String fallbackText = dbDoc.getDescription() != null && !dbDoc.getDescription().trim().isEmpty() 
                         ? dbDoc.getDescription() : "Tài liệu đa phương tiện: " + dbDoc.getFileName();
                 aiDocument = Document.from(fallbackText, new Metadata());
                 dbDoc.setRawContent(fallbackText);
             } else {
-                // Xử lý Text bằng Tika
                 log.info("Xử lý Text bằng Tika...");
                 try (InputStream fileStream = minioClient.getObject(
                         GetObjectArgs.builder()
@@ -120,11 +128,13 @@ public class DocumentAiService {
                                 .build())) {
                     ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
                     aiDocument = parser.parse(fileStream);
-                    dbDoc.setRawContent(aiDocument.text());
+                    String structuredText = documentStructureParser.parseToStructuredMarkdown(aiDocument.text(), dbDoc.getFileName());
+                    aiDocument = Document.from(structuredText, aiDocument.metadata());
+                    dbDoc.setRawContent(structuredText);
                 }
             }
 
-            // Cập nhật lại dbDoc
+
             documentRepository.save(dbDoc);
 
             if (aiDocument == null || aiDocument.text() == null || aiDocument.text().trim().isEmpty()) {
@@ -132,20 +142,20 @@ public class DocumentAiService {
                 return;
             }
 
-            // 2. Gắn Metadata
-            aiDocument.metadata().put("documentId", documentId);
-            aiDocument.metadata().put("projectId", projectId);
+            HierarchicalDocumentSplitter.DocumentChunkConfig chunkConfig = 
+                    new HierarchicalDocumentSplitter.DocumentChunkConfig(documentId, projectId, dbDoc.getFileName());
+            List<TextSegment> segments = hierarchicalDocumentSplitter.splitDocument(aiDocument.text(), chunkConfig);
 
-            // 3. Khởi tạo Pipeline
-            EmbeddingStoreIngestor ingestor = EmbeddingStoreIngestor.builder()
-                    .documentSplitter(DocumentSplitters.recursive(1500, 200))
-                    .embeddingModel(localEmbeddingModel)
-                    .embeddingStore(pgVectorEmbeddingStore)
-                    .build();
+            if (segments.isEmpty()) {
+                log.warn("Document không sinh ra chunk nào: {}", documentId);
+                return;
+            }
 
-            // 4. Thực thi
-            ingestor.ingest(aiDocument);
-            log.info("Ingest thành công documentId: {}", documentId);
+            jdbcTemplate.update("DELETE FROM document_embeddings WHERE metadata->>'documentId' = ?", documentId);
+
+            Response<List<Embedding>> embeddingResponse = localEmbeddingModel.embedAll(segments);
+            pgVectorEmbeddingStore.addAll(embeddingResponse.content(), segments);
+            log.info("Ingest thành công {} chunks phân cấp cho documentId: {}", segments.size(), documentId);
 
         } catch (Exception e) {
             log.error("Lỗi khi ingest document", e);
@@ -153,3 +163,4 @@ public class DocumentAiService {
         }
     }
 }
+

@@ -16,6 +16,7 @@ const Profile = React.lazy(() => import('../pages/Profile'));
 const ProjectWorkspace = React.lazy(() => import('../pages/ProjectWorkspace'));
 const JoinProject = React.lazy(() => import('../pages/JoinProject'));
 const VerifyEmail = React.lazy(() => import('../pages/VerifyEmail'));
+const ResetPassword = React.lazy(() => import('../pages/ResetPassword'));
 const AdminLayout = React.lazy(() => import('../pages/admin/AdminLayout'));
 const AdminDashboard = React.lazy(() => import('../pages/admin/AdminDashboard'));
 const AdminUsers = React.lazy(() => import('../pages/admin/AdminUsers'));
@@ -38,6 +39,7 @@ const AppRoutes = () => {
             <Route path="/" element={<Portal />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/verify" element={<VerifyEmail />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/about" element={<About />} />
             <Route path="/guide" element={<Guide />} />
             <Route path="/privacy" element={<Privacy />} />

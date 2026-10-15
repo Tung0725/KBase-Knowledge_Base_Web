@@ -5,6 +5,7 @@ import logoImg from '../assets/Logo_KBase.png';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
 
 
 const Auth: React.FC = () => {
@@ -12,6 +13,7 @@ const Auth: React.FC = () => {
   const { setUser } = useAuth();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
@@ -48,7 +50,13 @@ const Auth: React.FC = () => {
             setIsLoading(false);
             return;
         }
-        const response = await authService.register({ email, password, fullName });
+        const response = await authService.register({
+          email,
+          password,
+          confirmPassword,
+          fullName,
+          phoneNumber: phoneNumber.trim() ? phoneNumber.trim() : undefined,
+        });
         setToastMessage(response.message || 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.');
         setIsToastError(false);
         setShowToast(true);
@@ -115,7 +123,7 @@ const Auth: React.FC = () => {
           navigate('/hub');
         }
       }, 2000);
-    } catch (error: any) {
+    } catch {
       setToastMessage('Đăng nhập Google thất bại, vui lòng thử lại.');
       setIsToastError(true);
       setShowToast(true);
@@ -138,7 +146,7 @@ const Auth: React.FC = () => {
       <header className="w-full px-6 sm:px-12 py-5 sm:py-7 flex items-center justify-between z-10 bg-transparent">
 
         <Link className="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1" to="/">
-          <img src={logoImg} alt="KBase Logo" className="w-9 h-auto object-contain group-hover:scale-105 transition-transform duration-200" />
+          <img src={logoImg} alt="KBase Logo" width="36" height="36" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform duration-200" />
           <div className="flex flex-col">
             <span className="font-headline-sm text-xl font-bold tracking-tight text-on-surface leading-none">KBase</span>
             <span className="text-[11px] font-medium tracking-wide text-on-surface-variant leading-tight mt-0.5">Hub Tri thức Dự án</span>
@@ -300,17 +308,17 @@ const Auth: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-0.5 text-xs sm:text-sm">
-                  <div className="flex items-center gap-2">
-                    <input defaultChecked className="w-4 h-4 rounded text-primary focus:ring-0 accent-primary border-outline-variant cursor-pointer" id="staySignedIn" type="checkbox" />
-                    <label className="text-on-surface-variant select-none cursor-pointer" htmlFor="staySignedIn">
-                      Duy trì đăng nhập
-                    </label>
+                {!isRegisterMode && (
+                  <div className="flex items-center justify-end pt-0.5 text-xs sm:text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotPasswordOpen(true)}
+                      className="text-primary hover:text-primary-container font-semibold transition-colors cursor-pointer"
+                    >
+                      Quên mật khẩu?
+                    </button>
                   </div>
-                  <a className="text-primary hover:text-primary-container font-semibold transition-colors" href="#">
-                    Quên mật khẩu?
-                  </a>
-                </div>
+                )}
 
                 <button className="w-full py-3 px-6 rounded-full bg-primary-container hover:bg-primary text-on-primary-container font-headline-sm text-[15px] font-semibold tracking-normal shadow-sm hover:shadow-md active:scale-[0.99] transition-all duration-150 flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-wait" id="submitCtaBtn" type="submit" disabled={isLoading}>
                   {isLoading ? (
@@ -373,8 +381,11 @@ const Auth: React.FC = () => {
         @ Bản quyền thuộc Duy Tùng KBase 2026
       </footer>
 
-
-
+      {/* Forgot Password Dialog */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+      />
     </motion.div>
     </div>
   );

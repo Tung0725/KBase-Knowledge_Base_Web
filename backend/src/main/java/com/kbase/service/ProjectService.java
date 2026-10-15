@@ -12,6 +12,7 @@ import com.kbase.repository.ProjectMemberRepository;
 import com.kbase.entity.Document;
 import com.kbase.entity.ProjectMember;
 import com.kbase.repository.ChatMessageRepository;
+import com.kbase.repository.ChatSessionRepository;
 import com.kbase.dto.response.ProjectOverviewResponse;
 import com.kbase.dto.response.DocumentResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -41,6 +42,7 @@ public class ProjectService {
     private final DocumentRepository documentRepository;
     private final ProjectMemberRepository projectMemberRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatSessionRepository chatSessionRepository;
     private final JdbcTemplate jdbcTemplate;
 
     /**
@@ -148,6 +150,7 @@ public class ProjectService {
         documentRepository.deleteAllByProjectId(projectId);
         projectMemberRepository.deleteAllByProjectId(projectId);
         chatMessageRepository.deleteAllByProjectId(projectId);
+        chatSessionRepository.deleteAllByProjectId(projectId);
         
         // Clean up vector database
         jdbcTemplate.update("DELETE FROM document_embeddings WHERE metadata->>'projectId' = ?", projectId.toString());

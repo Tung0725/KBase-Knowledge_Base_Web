@@ -36,7 +36,7 @@ const AdminLayout: React.FC = () => {
       <aside className={`bg-surface-container-lowest border-r border-outline-variant/30 flex flex-col z-40 transition-all duration-300 flex-shrink-0 relative ${isSidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className={`h-14 shrink-0 flex items-center border-b border-outline-variant/30 ${isSidebarCollapsed ? 'justify-center px-0' : 'px-6'}`}>
           <Link to="/hub" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src={logoImg} alt="KBase Logo" className="w-8 h-auto object-contain shrink-0" />
+            <img src={logoImg} alt="KBase Logo" width="32" height="32" className="w-8 h-8 object-contain shrink-0" />
             {!isSidebarCollapsed && <span className="text-xl font-bold tracking-tight text-on-surface">KBase Admin</span>}
           </Link>
         </div>

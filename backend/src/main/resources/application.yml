@@ -37,12 +37,18 @@ spring:
       port: 6379
 
 app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}
   jwt:
     secret: ${JWT_SECRET:day_la_jwt_secret_gia_danh_cho_moi_truong_dev_dia_phuong}
     expiration-ms: 86400000 # 24 hours
   ai:
     deepseek:
       api-key: ${DEEPSEEK_API_KEY:sk-dummy-key-for-local-development}
+    cohere:
+      api-key: ${COHERE_API_KEY:}
+      model-name: ${COHERE_RERANK_MODEL:rerank-v3.5}
+
 
 minio:
   url: http://localhost:9000

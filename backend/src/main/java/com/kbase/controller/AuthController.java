@@ -17,6 +17,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * Controller responsible for Authentication APIs.
  * Exposes endpoints for user registration, login, and fetching the current authenticated profile.
  */
+import com.kbase.dto.request.ForgotPasswordRequest;
+import com.kbase.dto.request.ResetPasswordRequest;
+import com.kbase.service.PasswordResetService;
 import com.kbase.service.RateLimitingService;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,6 +32,7 @@ import org.springframework.http.HttpStatus;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
     private final RateLimitingService rateLimitingService;
     private final com.kbase.service.LoginAttemptService loginAttemptService;
 
@@ -126,5 +130,53 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
         authService.verifyEmail(token);
         return ResponseEntity.ok(ApiResponse.success(null, "Xác thực email thành công. Bạn có thể đăng nhập."));
+    }
+
+    /**
+     * Business Purpose: Sends a password reset link to user's registered email address.
+     * Role Permissions: Public.
+     *
+     * @param request Validated payload containing user's email.
+     * @param servletRequest The HTTP servlet request to extract client IP for rate limiting.
+     * @return ApiResponse confirming instruction dispatch.
+     */
+    @Operation(summary = "Forgot password", description = "Sends a password reset link to user's email")
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest servletRequest
+    ) {
+        String ip = servletRequest.getRemoteAddr();
+        Bucket bucket = rateLimitingService.resolveBucket(ip);
+
+        if (!bucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponse.error("Thao tác quá nhanh. Vui lòng đợi 1 phút trước khi thử lại."));
+        }
+
+        passwordResetService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success(
+                null,
+                "Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hòm thư của bạn."
+        ));
+    }
+
+    /**
+     * Business Purpose: Resets user's password using a valid one-time token.
+     * Role Permissions: Public.
+     *
+     * @param request Validated payload containing reset token and new password.
+     * @return ApiResponse confirming successful password update.
+     */
+    @Operation(summary = "Reset password", description = "Resets user's password using a valid token")
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+        passwordResetService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success(
+                null,
+                "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới."
+        ));
     }
 }

@@ -36,6 +36,7 @@ const ProjectWorkspace: React.FC = () => {
       <Routes>
         <Route path="/" element={<ProjectOverview />} />
         <Route path="/chat" element={<ProjectAIChat />} />
+        <Route path="/chat/:sessionId" element={<ProjectAIChat />} />
         <Route path="/documents" element={<ProjectDocuments />} />
         <Route path="/members" element={<ProjectMembers />} />
         <Route path="*" element={<Navigate to={`/projects/${projectId}`} replace />} />

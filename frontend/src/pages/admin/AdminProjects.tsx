@@ -1,7 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { adminService, type AdminProject } from '../../services/adminService';
 import { Link } from 'react-router-dom';
 
+/**
+ * AdminProjects page
+ * Quản trị toàn bộ danh sách dự án trong hệ thống, phân trang, lọc và điều chỉnh dung lượng.
+ *
+ * Props: None
+ * Key States:
+ *  - projects: danh sách dự án hiện tại
+ *  - isLoading: trạng thái tải dữ liệu
+ *  - search, sortBy, currentPage: bộ lọc và phân trang
+ */
 const AdminProjects: React.FC = () => {
   const [projects, setProjects] = useState<AdminProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,14 +33,7 @@ const AdminProjects: React.FC = () => {
   const [selectedQuotaGB, setSelectedQuotaGB] = useState<number>(1);
   const [quotaError, setQuotaError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProjects();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search, sortBy, currentPage]);
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await adminService.getProjects(search, currentPage, pageSize, sortBy);
@@ -42,7 +45,14 @@ const AdminProjects: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [search, currentPage, pageSize, sortBy]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProjects();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [fetchProjects]);
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B';

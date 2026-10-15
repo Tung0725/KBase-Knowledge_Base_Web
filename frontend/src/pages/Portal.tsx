@@ -18,7 +18,7 @@ const Portal: React.FC = () => {
         <div className="h-20 max-w-[1280px] mx-auto px-gutter flex items-center justify-between gap-space-md">
           <div className="flex items-center gap-space-md">
             <div className="flex items-center gap-space-sm group cursor-default">
-              <img src={logoImg} alt="KBase Logo" className="h-10 w-auto object-contain transition-transform group-hover:scale-105" />
+              <img src={logoImg} alt="KBase Logo" width="40" height="40" className="h-10 w-10 object-contain transition-transform group-hover:scale-105" />
               <div className="flex flex-col">
                 <span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface leading-none">KBase</span>
                 <span className="font-label-sm text-label-sm text-on-surface-variant leading-tight mt-0.5">Hub Tri thức Dự án</span>
@@ -706,7 +706,7 @@ const Portal: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter-lg mb-space-xl">
             <div className="lg:col-span-2 flex flex-col items-start pr-space-lg">
               <div className="flex items-center gap-space-sm mb-space-sm">
-                <img src={logoImg} alt="KBase Logo" className="h-9 w-auto object-contain" />
+                <img src={logoImg} alt="KBase Logo" width="36" height="36" className="h-9 w-9 object-contain" />
                 <span className="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface">KBase</span>
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant max-w-sm mb-space-md">

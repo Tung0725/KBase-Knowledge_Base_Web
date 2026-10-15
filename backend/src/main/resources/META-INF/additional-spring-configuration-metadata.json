@@ -1,0 +1,22 @@
+{"properties": [
+  {
+    "name": "app.jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'app.jwt.secret'"
+  },
+  {
+    "name": "app.ai.deepseek.api-key",
+    "type": "java.lang.String",
+    "description": "A description for 'app.ai.deepseek.api-key'"
+  },
+  {
+    "name": "app.ai.openrouter.api-key",
+    "type": "java.lang.String",
+    "description": "A description for 'app.ai.openrouter.api-key'"
+  },
+  {
+    "name": "app.ai.cohere.api-key",
+    "type": "java.lang.String",
+    "description": "A description for 'app.ai.cohere.api-key'"
+  }
+]}

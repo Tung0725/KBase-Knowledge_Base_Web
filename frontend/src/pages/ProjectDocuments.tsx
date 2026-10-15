@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { documentService } from '../services/documentService';
@@ -58,13 +58,7 @@ const ProjectDocuments: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (projectId) {
-      loadDocuments();
-    }
-  }, [projectId]);
-
-  const loadDocuments = async () => {
+  const loadDocuments = useCallback(async () => {
     if (!projectId) return;
     try {
       setLoading(true);
@@ -78,12 +72,18 @@ const ProjectDocuments: React.FC = () => {
         mMap[m.userId] = m.email.split('@')[0];
       });
       setMemberMap(mMap);
-    } catch (error: any) {
+    } catch {
       toast.error('Lỗi khi tải danh sách tài liệu', { id: 'load-docs-err' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (projectId) {
+      loadDocuments();
+    }
+  }, [projectId, loadDocuments]);
 
   const dragCounter = useRef(0);
 
@@ -246,7 +246,7 @@ const ProjectDocuments: React.FC = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } catch (error: any) {
+    } catch {
       toast.error('Lỗi khi tải xuống', { id: 'download-err' });
     }
   };
@@ -302,7 +302,7 @@ const ProjectDocuments: React.FC = () => {
       const url = await documentService.getDownloadUrl(projectId, doc.id, true);
       toast.dismiss(loadingToast);
       window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (error) {
+    } catch {
       toast.dismiss(loadingToast);
       toast.error('Không thể mở tài liệu', { id: 'preview-err' });
     }

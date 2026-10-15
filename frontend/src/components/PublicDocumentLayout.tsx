@@ -21,7 +21,7 @@ const PublicDocumentLayout: React.FC<PublicDocumentLayoutProps> = ({ title, subt
             <span className="font-label-md text-on-surface-variant group-hover:text-primary transition-colors">Về trang chủ</span>
           </Link>
           <div className="flex items-center gap-3">
-             <img src={logoImg} alt="KBase Logo" className="h-7 w-auto object-contain" />
+             <img src={logoImg} alt="KBase Logo" width="28" height="28" className="h-7 w-7 object-contain" />
              <span className="font-headline-sm text-sm font-semibold tracking-tight">KBase</span>
           </div>
         </div>

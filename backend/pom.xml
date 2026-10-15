@@ -167,10 +167,10 @@
 			<version>0.36.2</version>
 		</dependency>
 
-		<!-- LangChain4j Local Embedding (Chạy nhúng offline miễn phí) -->
+		<!-- LangChain4j BGE-Small v1.5 Quantized ONNX (Mô hình nhúng cục bộ thế hệ mới) -->
 		<dependency>
 			<groupId>dev.langchain4j</groupId>
-			<artifactId>langchain4j-embeddings-all-minilm-l6-v2-q</artifactId>
+			<artifactId>langchain4j-embeddings-bge-small-en-v15-q</artifactId>
 			<version>0.36.2</version>
 		</dependency>
 
@@ -215,6 +215,35 @@
 								</path>
 							</annotationProcessorPaths>
 						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<configuration>
+					<excludes>
+						<exclude>com/kbase/config/**</exclude>
+						<exclude>com/kbase/entity/**</exclude>
+						<exclude>com/kbase/dto/**</exclude>
+						<exclude>com/kbase/exception/**</exclude>
+						<exclude>com/kbase/security/**</exclude>
+						<exclude>com/kbase/KbaseBackendApplication.*</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>

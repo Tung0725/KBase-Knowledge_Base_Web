@@ -1,10 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { projectService } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
+/**
+ * JoinProject component
+ * Handles invitation link verification and automated project onboarding.
+ *
+ * Props: None (reads inviteCode from URL params)
+ * Key States:
+ *  - loading: trạng thái đang xử lý join
+ *  - error: thông báo lỗi nếu link không hợp lệ
+ */
 const JoinProject: React.FC = () => {
   const { inviteCode } = useParams<{ inviteCode: string }>();
   const navigate = useNavigate();
@@ -12,28 +21,14 @@ const JoinProject: React.FC = () => {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const hasAttemptedJoin = React.useRef(false);
+  const hasAttemptedJoin = useRef(false);
 
-  useEffect(() => {
-    if (!user) {
-      // If not logged in, redirect to auth but save the invite code logic to localStorage or URL params
-      // Since Auth page doesn't currently handle deep links gracefully out of the box, we just pass redirect
-      sessionStorage.setItem('redirectAfterAuth', `/join/${inviteCode}`);
-      navigate('/auth', { replace: true });
-      return;
-    }
-    
-    if (!hasAttemptedJoin.current) {
-        hasAttemptedJoin.current = true;
-        joinProject();
-    }
-  }, [user, inviteCode, navigate]);
-
-  const joinProject = async () => {
+  const joinProject = useCallback(async () => {
+    if (!inviteCode) return;
     try {
       setLoading(true);
       setError(null);
-      const res = await projectService.joinProjectByInviteCode(inviteCode!);
+      const res = await projectService.joinProjectByInviteCode(inviteCode);
       toast.success('Tham gia dự án thành công!');
       if (res.projectId) {
         navigate(`/projects/${res.projectId}`, { replace: true });
@@ -52,7 +47,20 @@ const JoinProject: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [inviteCode, navigate]);
+
+  useEffect(() => {
+    if (!user) {
+      sessionStorage.setItem('redirectAfterAuth', `/join/${inviteCode}`);
+      navigate('/auth', { replace: true });
+      return;
+    }
+    
+    if (!hasAttemptedJoin.current) {
+      hasAttemptedJoin.current = true;
+      joinProject();
+    }
+  }, [user, inviteCode, navigate, joinProject]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface p-4 font-sans">

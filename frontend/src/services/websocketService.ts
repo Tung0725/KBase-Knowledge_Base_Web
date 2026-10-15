@@ -1,4 +1,5 @@
 import { Client } from '@stomp/stompjs';
+import { API_BASE_URL } from './apiClient';
 
 class WebSocketService {
   private client: Client | null = null;
@@ -11,8 +12,7 @@ class WebSocketService {
       return;
     }
 
-    const apiBase = import.meta.env.PROD ? 'https://kbase-knowledge-base-web.onrender.com/api' : 'http://localhost:8080/api';
-    const wsBase = apiBase.replace(/^http/, 'ws').replace('/api', '');
+    const wsBase = API_BASE_URL.replace(/^http/, 'ws').replace('/api', '');
 
     this.client = new Client({
       brokerURL: `${wsBase}/ws-kbase`,

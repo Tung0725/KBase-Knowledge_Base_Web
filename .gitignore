@@ -65,7 +65,7 @@ pnpm-debug.log*
 *.swo
 .env
 *.env.*
-application-secret.yml
+backend/application-secret.yml
 repomix-output.xml
 .repomixignore
 repomix.config.json

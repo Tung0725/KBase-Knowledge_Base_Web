@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import { projectService, type InviteLinkInfo } from '../services/projectService';
@@ -40,6 +40,24 @@ const ProjectMembers: React.FC = () => {
   const [isLinkLoading, setIsLinkLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  const loadMembers = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      setLoading(true);
+      const data = await projectService.getProjectMembers(projectId);
+      setMembers(data);
+
+      const owner = data.find(m => m.role === 'OWNER');
+      if (owner && owner.userId === user?.userId) {
+        setIsOwner(true);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Lỗi khi tải thành viên', { id: 'load-members-err' });
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId, user?.userId]);
+
   useEffect(() => {
     if (projectId) {
       loadMembers();
@@ -52,24 +70,7 @@ const ProjectMembers: React.FC = () => {
     return () => {
       websocketService.disconnect();
     };
-  }, [projectId]);
-
-  const loadMembers = async () => {
-    try {
-      setLoading(true);
-      const data = await projectService.getProjectMembers(projectId!);
-      setMembers(data);
-
-      const owner = data.find(m => m.role === 'OWNER');
-      if (owner && owner.userId === user?.userId) {
-        setIsOwner(true);
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Lỗi khi tải thành viên', { id: 'load-members-err' });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [projectId, loadMembers]);
 
   const openInviteLinkModal = async () => {
     setIsInviteLinkModalOpen(true);
@@ -78,7 +79,7 @@ const ProjectMembers: React.FC = () => {
         setIsLinkLoading(true);
         const data = await projectService.getInviteLink(projectId!);
         setInviteLink(data);
-      } catch (error: any) {
+      } catch {
         toast.error('Lỗi khi tải thông tin link mời', { id: 'get-link-err' });
       } finally {
         setIsLinkLoading(false);

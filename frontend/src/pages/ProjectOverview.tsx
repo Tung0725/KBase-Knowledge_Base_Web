@@ -93,7 +93,7 @@ const ProjectOverview: React.FC = () => {
       setOverview({ ...overview, name: editName, description: editDesc });
       setIsEditing(false);
       toast.success('Đã cập nhật thông tin dự án', { id: 'update-project-success' });
-    } catch (error) {
+    } catch {
       toast.error('Không thể cập nhật thông tin dự án', { id: 'update-project-err' });
     } finally {
       setIsSaving(false);
@@ -110,7 +110,7 @@ const ProjectOverview: React.FC = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } catch (error) {
+    } catch {
       toast.error('Lỗi khi tải xuống', { id: 'download-err' });
     }
   };
@@ -155,7 +155,7 @@ const ProjectOverview: React.FC = () => {
     try {
       const url = await documentService.getDownloadUrl(projectId, doc.id, true);
       window.open(url, '_blank');
-    } catch (e) {
+    } catch {
       toast.error('Không thể mở tài liệu', { id: 'preview-err' });
     }
   };
